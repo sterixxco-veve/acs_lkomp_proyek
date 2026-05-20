@@ -42,7 +42,6 @@ function createWindow() {
  * Channel ini harus sama dengan yang dipanggil di preload/index.js
  */
 function registerIpcHandlers() {
-
   ipcMain.handle('db:login', async (_, credentials) => {
     return await db.login(credentials)
   })
@@ -72,7 +71,7 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  registerIpcHandlers()
+  // registerIpcHandlers()
   createWindow()
 
   app.on('activate', function () {

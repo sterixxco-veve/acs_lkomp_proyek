@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import mysql from 'mysql2/promise'
 
 // Konfigurasi koneksi pool
 const pool = mysql.createPool({
@@ -9,7 +9,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
-});
+})
 
 /**
  * Handler untuk Login
@@ -19,12 +19,12 @@ export async function login({ username, password }) {
     const [rows] = await pool.execute(
       'SELECT user_id, username, role, lab_id, full_name FROM users WHERE username = ? AND password = ?',
       [username, password]
-    );
-    return rows.length > 0 
-      ? { success: true, user: rows[0] } 
-      : { success: false, message: 'Username atau Password salah' };
+    )
+    return rows.length > 0
+      ? { success: true, user: rows[0] }
+      : { success: false, message: 'Username atau Password salah' }
   } catch (err) {
-    return { success: false, error: err.message };
+    return { success: false, error: err.message }
   }
 }
 
@@ -36,11 +36,11 @@ export async function getAllPCs(labId) {
     const [rows] = await pool.execute(
       'SELECT * FROM pc_units WHERE lab_id = ? ORDER BY grid_section, grid_row, grid_column',
       [labId]
-    );
-    return rows;
+    )
+    return rows
   } catch (err) {
-    console.error('[DB Error]:', err);
-    return [];
+    console.error('[DB Error]:', err)
+    return []
   }
 }
 
@@ -49,13 +49,10 @@ export async function getAllPCs(labId) {
  */
 export async function reportDamage({ pcId, reporterId, desc, severity }) {
   try {
-    await pool.query(
-      'CALL sp_generate_tiket(?, ?, ?, ?)',
-      [pcId, reporterId, desc, severity]
-    );
-    return { success: true };
+    await pool.query('CALL sp_generate_tiket(?, ?, ?, ?)', [pcId, reporterId, desc, severity])
+    return { success: true }
   } catch (err) {
-    return { success: false, message: err.message };
+    return { success: false, message: err.message }
   }
 }
 
@@ -64,10 +61,10 @@ export async function reportDamage({ pcId, reporterId, desc, severity }) {
  */
 export async function getRekapPeminjaman() {
   try {
-    const [rows] = await pool.query('SELECT * FROM view_rekap_peminjaman');
-    return rows;
+    const [rows] = await pool.query('SELECT * FROM view_rekap_peminjaman')
+    return rows
   } catch (err) {
-    return [];
+    return []
   }
 }
 
@@ -76,10 +73,10 @@ export async function getRekapPeminjaman() {
  */
 export async function getLabHealth() {
   try {
-    const [rows] = await pool.query('SELECT * FROM view_analitik_kesehatan_lab');
-    return rows;
+    const [rows] = await pool.query('SELECT * FROM view_analitik_kesehatan_lab')
+    return rows
   } catch (err) {
-    return [];
+    return []
   }
 }
 
@@ -89,4 +86,4 @@ export default {
   reportDamage,
   getRekapPeminjaman,
   getLabHealth
-};
+}
