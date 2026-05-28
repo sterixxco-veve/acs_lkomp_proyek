@@ -1,16 +1,46 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-/**
- * Jembatan komunikasi antara React (Renderer) dan Node.js (Main)
- * Kita mengekspos objek 'api' ke dalam 'window' di browser
- */
 const api = {
+  register: (data) => ipcRenderer.invoke('db:register', data),
+
   login: (credentials) => ipcRenderer.invoke('db:login', credentials),
+
   getPCs: (labId) => ipcRenderer.invoke('db:getPCs', labId),
-  reportDamage: (data) => ipcRenderer.invoke('db:reportDamage', data),
-  getRekap: () => ipcRenderer.invoke('db:getRekap'),
-  getHealth: () => ipcRenderer.invoke('db:getHealth')
+
+  addPC: (data) => ipcRenderer.invoke('db:addPC', data),
+
+  getComponents: () => ipcRenderer.invoke('db:getComponents'),
+
+  addComponent: (data) => ipcRenderer.invoke('db:addComponent', data),
+
+  getSoftwares: () => ipcRenderer.invoke('db:getSoftwares'),
+
+  createMaintenance: (data) => ipcRenderer.invoke('db:createMaintenance', data),
+
+  addMaintenanceDetail: (data) => ipcRenderer.invoke('db:addMaintenanceDetail', data),
+
+  finishMaintenance: (id) => ipcRenderer.invoke('db:finishMaintenance', id),
+
+  getHealth: () => ipcRenderer.invoke('db:getHealth'),
+
+  getLowStock: () => ipcRenderer.invoke('db:getLowStock'),
+
+  getMaintenanceTrend: () => ipcRenderer.invoke('db:getMaintenanceTrend'),
+
+  getDashboardSummary: () => ipcRenderer.invoke('db:getDashboardSummary'),
+
+  getLiveActivity: () => ipcRenderer.invoke('db:getLiveActivity')
 }
 
-contextBridge.exposeInMainWorld('api', api)
+if (process.contextIsolated) {
+  try {
+    contextBridge.exposeInMainWorld('electron', electronAPI)
+    contextBridge.exposeInMainWorld('api', api)
+  } catch (error) {
+    console.error(error)
+  }
+} else {
+  window.electron = electronAPI
+  window.api = api
+}

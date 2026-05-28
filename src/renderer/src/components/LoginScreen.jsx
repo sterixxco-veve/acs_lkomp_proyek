@@ -1,20 +1,38 @@
 import React, { useState } from 'react'
-import { electronAPI } from '../lib/electronAPI'
 
-export const LoginScreen = ({ onLogin }) => {
+export const LoginScreen = ({ onLogin, goRegister }) => {
   const [creds, setCreds] = useState({ username: '', password: '' })
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  console.log(window.api)
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    console.log('LOGIN START')
+
     setLoading(true)
     setError('')
-    const res = await electronAPI.login(creds)
-    if (res.success) onLogin(res.user)
-    else setError(res.message)
+
+    try {
+      const res = await window.api.login(creds)
+
+      console.log('LOGIN RESPONSE:', res)
+
+      if (res.success) {
+        console.log('LOGIN SUCCESS')
+        onLogin(res.user)
+      } else {
+        console.log('LOGIN FAILED')
+        setError(res.message)
+      }
+    } catch (err) {
+      console.error(err)
+      setError('Terjadi kesalahan sistem')
+    }
+
     setLoading(false)
   }
 
@@ -190,6 +208,13 @@ export const LoginScreen = ({ onLogin }) => {
                 )}
               </button>
             </form>
+            <button
+              type="button"
+              onClick={goRegister}
+              className="text-sm text-blue-600 hover:underline mt-4 block"
+            >
+              Belum punya akun? Daftar di sini
+            </button>
           </div>
 
           {/* Demo Credentials Info */}

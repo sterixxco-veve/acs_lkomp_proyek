@@ -2,22 +2,83 @@
  * MOCK API (Electron IPC Handlers - Proposal v2.0)
  * Menangani query ke MySQL (Simulasi)
  */
+
+// Simple in-memory storage for registered users (in production, use database)
+let registeredUsers = [
+  {
+    user_id: 1,
+    username: 'admin_asisten',
+    password: 'password123',
+    full_name: 'Asisten Lab Utama',
+    role: 'admin',
+    lab_id: 'L2'
+  },
+  {
+    user_id: 2,
+    username: 'kiosk_l2',
+    password: 'password456',
+    full_name: 'Kiosk Lab L2',
+    role: 'kiosk',
+    lab_id: 'L2'
+  }
+]
+
 export const electronAPI = {
+  register: async (creds) => {
+    await new Promise((r) => setTimeout(r, 600))
+
+    // Validate input
+    if (!creds.username || !creds.password) {
+      return { success: false, message: 'Username dan password diperlukan' }
+    }
+
+    if (creds.username.length < 3) {
+      return { success: false, message: 'Username minimal 3 karakter' }
+    }
+
+    if (creds.password.length < 6) {
+      return { success: false, message: 'Password minimal 6 karakter' }
+    }
+
+    // Check if username already exists
+    if (registeredUsers.some((u) => u.username === creds.username)) {
+      return { success: false, message: 'Username sudah digunakan' }
+    }
+
+    // Create new user
+    const newUser = {
+      user_id: Math.max(...registeredUsers.map((u) => u.user_id), 0) + 1,
+      username: creds.username,
+      password: creds.password,
+      full_name: creds.username,
+      role: 'user',
+      lab_id: null,
+      created_at: new Date().toISOString()
+    }
+
+    registeredUsers.push(newUser)
+
+    return {
+      success: true,
+      message: 'Registrasi berhasil',
+      user: newUser
+    }
+  },
+
   login: async (creds) => {
     await new Promise((r) => setTimeout(r, 600))
-    if (creds.username === 'admin_asisten') {
+    const user = registeredUsers.find(
+      (u) => u.username === creds.username && u.password === creds.password
+    )
+
+    if (user) {
+      const { password, ...userWithoutPassword } = user
       return {
         success: true,
-        user: { user_id: 1, full_name: 'Asisten Lab Utama', role: 'admin', lab_id: 'L2' }
+        user: userWithoutPassword
       }
     }
-    if (creds.username === 'kiosk_l2') {
-      return {
-        success: true,
-        user: { user_id: 2, full_name: 'Kiosk Lab L2', role: 'kiosk', lab_id: 'L2' }
-      }
-    }
-    return { success: false, message: 'Kombinasi login tidak valid.' }
+    return { success: false, message: 'Username atau Password salah' }
   },
 
   getPCs: async (labId) => {

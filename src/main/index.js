@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import db from './db_handlers' // Vite akan mem-bundle file ini secara otomatis
+import db from './db_handlers'
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -12,7 +12,6 @@ function createWindow() {
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      // Pastikan path preload benar sesuai standar build electron-vite
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       contextIsolation: true,
@@ -29,7 +28,6 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  // Memuat URL dari Vite (dev) atau file html (prod)
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -37,11 +35,11 @@ function createWindow() {
   }
 }
 
-/**
- * REGISTRASI HANDLER DATABASE
- * Channel ini harus sama dengan yang dipanggil di preload/index.js
- */
 function registerIpcHandlers() {
+  ipcMain.handle('db:register', async (_, data) => {
+    return await db.register(data)
+  })
+
   ipcMain.handle('db:login', async (_, credentials) => {
     return await db.login(credentials)
   })
@@ -50,17 +48,52 @@ function registerIpcHandlers() {
     return await db.getAllPCs(labId)
   })
 
-  ipcMain.handle('db:reportDamage', async (_, data) => {
-    return await db.reportDamage(data)
+  ipcMain.handle('db:addPC', async (_, data) => {
+    return await db.addPC(data)
   })
 
-  // FIX: sesuaikan nama function
-  ipcMain.handle('db:getRekap', async () => {
-    return await db.getRekapPeminjaman()
+  ipcMain.handle('db:getComponents', async () => {
+    return await db.getComponents()
+  })
+
+  ipcMain.handle('db:addComponent', async (_, data) => {
+    return await db.addComponent(data)
+  })
+
+  ipcMain.handle('db:getSoftwares', async () => {
+    return await db.getSoftwares()
+  })
+
+  ipcMain.handle('db:createMaintenance', async (_, data) => {
+    return await db.createMaintenance(data)
+  })
+
+  ipcMain.handle('db:addMaintenanceDetail', async (_, data) => {
+    return await db.addMaintenanceDetail(data)
+  })
+
+  ipcMain.handle('db:finishMaintenance', async (_, id) => {
+    return await db.finishMaintenance(id)
   })
 
   ipcMain.handle('db:getHealth', async () => {
-    return await db.getLabHealth()
+    return await db.getHealthStatus()
+  })
+
+  ipcMain.handle('db:getLowStock', async () => {
+    return await db.getLowStock()
+  })
+
+  ipcMain.handle('db:getMaintenanceTrend', async () => {
+    return await db.getMaintenanceTrend()
+  })
+
+  ipcMain.handle('db:getDashboardSummary', async () => {
+    return await db.getDashboardSummary()
+  })
+
+  ipcMain.handle('db:getLiveActivity', async () => {
+    return await db.getLiveActivity()
   })
 }
 
@@ -71,7 +104,7 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // registerIpcHandlers()
+  registerIpcHandlers()
   createWindow()
 
   app.on('activate', function () {

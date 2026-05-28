@@ -1,79 +1,377 @@
 import mysql from 'mysql2/promise'
+import bcrypt from 'bcrypt'
 
-// Konfigurasi koneksi pool
+// ========================================
+// MYSQL CONNECTION
+// ========================================
+
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'lkomp_admin',
   password: 'admin_password',
-  database: 'lkomp_hardware',
+  database: 'acs_lkomp',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 })
 
-/**
- * Handler untuk Login
- */
+// ========================================
+// AUTH
+// ========================================
+
+export async function register({ username, password, fullName = null, roleId = 2, labId = null }) {
+  try {
+    const [existing] = await pool.execute('SELECT user_id FROM users WHERE username = ?', [
+      username
+    ])
+
+    if (existing.length > 0) {
+      return {
+        success: false,
+        message: 'Username sudah digunakan'
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const [result] = await pool.execute(
+      `
+      INSERT INTO users
+      (username, password, full_name, role_id, lab_id, status)
+      VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [username, hashedPassword, fullName || username, roleId, labId, 'Active']
+    )
+
+    return {
+      success: true,
+      user: {
+        user_id: result.insertId,
+        username,
+        full_name: fullName || username,
+        role_id: roleId
+      }
+    }
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message
+    }
+  }
+}
+
 export async function login({ username, password }) {
   try {
     const [rows] = await pool.execute(
-      'SELECT user_id, username, role, lab_id, full_name FROM users WHERE username = ? AND password = ?',
-      [username, password]
+      ` SELECT u.user_id, u.username, u.PASSWORD AS password, u.full_name, u.role_id, r.role_name, u.lab_id, u.STATUS AS status FROM users u JOIN roles r ON u.role_id = r.role_id WHERE u.username = ? AND u.STATUS = 'Active' `,
+      [username]
     )
-    return rows.length > 0
-      ? { success: true, user: rows[0] }
-      : { success: false, message: 'Username atau Password salah' }
+
+    if (rows.length === 0) {
+      return {
+        success: false,
+        message: 'Username tidak ditemukan'
+      }
+    }
+
+    const user = rows[0]
+    console.log('INPUT PASSWORD:', password)
+    console.log('HASH DB:', user.password)
+
+    console.log(await bcrypt.compare(password, user.password))
+
+    const isMatch = await bcrypt.compare(password, user.password)
+    console.log(user)
+
+    if (!isMatch) {
+      return {
+        success: false,
+        message: 'Password salah'
+      }
+    }
+
+    delete user.password
+
+    return {
+      success: true,
+      user
+    }
   } catch (err) {
-    return { success: false, error: err.message }
+    console.error(err)
+
+    return {
+      success: false,
+      message: err.message
+    }
   }
 }
 
-/**
- * Handler untuk mengambil semua data PC di sebuah Lab
- */
-export async function getAllPCs(labId) {
+// ========================================
+// MASTER PC
+// ========================================
+
+export async function getAllPCs(labId = null) {
   try {
-    const [rows] = await pool.execute(
-      'SELECT * FROM pc_units WHERE lab_id = ? ORDER BY grid_section, grid_row, grid_column',
-      [labId]
-    )
+    let query = `
+      SELECT
+        p.*,
+        l.lab_name
+      FROM pcs p
+      JOIN labs l ON p.lab_id = l.lab_id
+    `
+
+    let params = []
+
+    if (labId) {
+      query += ' WHERE p.lab_id = ?'
+      params.push(labId)
+    }
+
+    query += ' ORDER BY p.pc_code ASC'
+
+    const [rows] = await pool.execute(query, params)
+
     return rows
   } catch (err) {
-    console.error('[DB Error]:', err)
+    console.error(err)
     return []
   }
 }
 
-/**
- * Memanggil Stored Procedure sp_generate_tiket
- */
-export async function reportDamage({ pcId, reporterId, desc, severity }) {
+export async function addPC(data) {
   try {
-    await pool.query('CALL sp_generate_tiket(?, ?, ?, ?)', [pcId, reporterId, desc, severity])
-    return { success: true }
+    await pool.query('CALL sp_add_pc(?, ?, ?, ?, ?, ?)', [
+      data.pc_code,
+      data.lab_id,
+      data.processor,
+      data.ram,
+      data.storage,
+      data.gpu
+    ])
+
+    return {
+      success: true
+    }
   } catch (err) {
-    return { success: false, message: err.message }
+    return {
+      success: false,
+      message: err.message
+    }
   }
 }
 
-/**
- * Mengambil data dari View view_rekap_peminjaman
- */
-export async function getRekapPeminjaman() {
+// ========================================
+// COMPONENTS
+// ========================================
+
+export async function getComponents() {
   try {
-    const [rows] = await pool.query('SELECT * FROM view_rekap_peminjaman')
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM components
+      ORDER BY component_name ASC
+    `)
+
     return rows
   } catch (err) {
     return []
   }
 }
 
-/**
- * Mengambil data dari View view_analitik_kesehatan_lab
- */
-export async function getLabHealth() {
+export async function addComponent(data) {
   try {
-    const [rows] = await pool.query('SELECT * FROM view_analitik_kesehatan_lab')
+    await pool.execute(
+      `
+      INSERT INTO components
+      (
+        component_name,
+        brand,
+        type,
+        stock,
+        min_stock,
+        condition_status
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [
+        data.component_name,
+        data.brand,
+        data.type,
+        data.stock,
+        data.min_stock,
+        data.condition_status
+      ]
+    )
+
+    return {
+      success: true
+    }
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message
+    }
+  }
+}
+
+// ========================================
+// SOFTWARE
+// ========================================
+
+export async function getSoftwares() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM softwares
+      ORDER BY software_name ASC
+    `)
+
+    return rows
+  } catch (err) {
+    return []
+  }
+}
+
+// ========================================
+// MAINTENANCE
+// ========================================
+
+export async function createMaintenance(data) {
+  try {
+    const [result] = await pool.execute(
+      `
+      INSERT INTO maintenance
+      (
+        pc_id,
+        complaint,
+        maintenance_status,
+        handled_by
+      )
+      VALUES (?, ?, ?, ?)
+      `,
+      [data.pc_id, data.complaint, 'Pending', data.handled_by]
+    )
+
+    return {
+      success: true,
+      maintenance_id: result.insertId
+    }
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message
+    }
+  }
+}
+
+export async function addMaintenanceDetail(data) {
+  try {
+    await pool.execute(
+      `
+      INSERT INTO maintenance_details
+      (
+        maintenance_id,
+        component_id,
+        quantity
+      )
+      VALUES (?, ?, ?)
+      `,
+      [data.maintenance_id, data.component_id, data.quantity]
+    )
+
+    return {
+      success: true
+    }
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message
+    }
+  }
+}
+
+export async function finishMaintenance(maintenanceId) {
+  try {
+    await pool.query('CALL sp_finish_maintenance(?)', [maintenanceId])
+
+    return {
+      success: true
+    }
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message
+    }
+  }
+}
+
+// ========================================
+// REPORTS
+// ========================================
+
+export async function getHealthStatus() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM vw_health_status_per_lab
+    `)
+
+    return rows
+  } catch (err) {
+    return []
+  }
+}
+
+export async function getLowStock() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM vw_low_stock_alert
+    `)
+
+    return rows
+  } catch (err) {
+    return []
+  }
+}
+
+export async function getMaintenanceTrend() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM vw_maintenance_trend
+    `)
+
+    return rows
+  } catch (err) {
+    return []
+  }
+}
+
+// ========================================
+// TV DASHBOARD
+// ========================================
+
+export async function getDashboardSummary() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM vw_dashboard_summary
+    `)
+
+    return rows[0]
+  } catch (err) {
+    return null
+  }
+}
+
+export async function getLiveActivity() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM vw_live_activity
+      LIMIT 10
+    `)
+
     return rows
   } catch (err) {
     return []
@@ -81,9 +379,25 @@ export async function getLabHealth() {
 }
 
 export default {
+  register,
   login,
+
   getAllPCs,
-  reportDamage,
-  getRekapPeminjaman,
-  getLabHealth
+  addPC,
+
+  getComponents,
+  addComponent,
+
+  getSoftwares,
+
+  createMaintenance,
+  addMaintenanceDetail,
+  finishMaintenance,
+
+  getHealthStatus,
+  getLowStock,
+  getMaintenanceTrend,
+
+  getDashboardSummary,
+  getLiveActivity
 }
