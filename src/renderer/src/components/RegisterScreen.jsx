@@ -15,23 +15,23 @@ export const RegisterScreen = ({ onBackToLogin }) => {
 
   const roleMap = {
     L4: {
-      roleId: 2,
+      roleId: 1,
       labId: 1
     },
     L3: {
-      roleId: 4,
+      roleId: 2,
       labId: 2
     },
     L2: {
-      roleId: 5,
+      roleId: 3,
       labId: 3
     },
     E4: {
-      roleId: 6,
+      roleId: 4,
       labId: 4
     },
     Sekretaris: {
-      roleId: 3,
+      roleId: 6,
       labId: null
     }
   }

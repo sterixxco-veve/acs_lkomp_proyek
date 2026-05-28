@@ -48,6 +48,73 @@ CREATE TABLE users (
 );
 
 
+CREATE TABLE documents (
+    document_id INT PRIMARY KEY AUTO_INCREMENT,
+
+    document_number VARCHAR(100) UNIQUE,
+
+    purpose VARCHAR(255) NOT NULL,
+    event_name VARCHAR(255) NOT NULL,
+
+    requester_name VARCHAR(100) NOT NULL,
+    requester_position VARCHAR(100),
+
+    approver_name VARCHAR(100),
+    approver_position VARCHAR(100),
+
+    total_user INT DEFAULT 0,
+
+    notes TEXT,
+
+    STATUS ENUM(
+        'Draft',
+        'Pending',
+        'Approved',
+        'Rejected',
+        'Completed'
+    ) DEFAULT 'Draft',
+
+    created_by INT,
+    approved_by INT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_document_creator
+        FOREIGN KEY (created_by)
+        REFERENCES users(user_id),
+
+    CONSTRAINT fk_document_approver
+        FOREIGN KEY (approved_by)
+        REFERENCES users(user_id)
+);
+
+
+CREATE TABLE document_items (
+    document_item_id INT PRIMARY KEY AUTO_INCREMENT,
+
+    document_id INT NOT NULL,
+
+    item_name VARCHAR(255) NOT NULL,
+
+    quantity INT DEFAULT 1,
+
+    start_time DATETIME NOT NULL,
+    end_time DATETIME NOT NULL,
+
+    revision_count INT DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_document_item_document
+        FOREIGN KEY (document_id)
+        REFERENCES documents(document_id)
+        ON DELETE CASCADE
+);
+
+
+
 CREATE TABLE pcs (
     pc_id INT PRIMARY KEY AUTO_INCREMENT,
     pc_code VARCHAR(20) UNIQUE NOT NULL,
@@ -435,10 +502,65 @@ VALUES
 ('SuperAdmin'),
 ('Sekretaris');
 
-
 INSERT INTO labs(lab_code, lab_name, location)
 VALUES
 ('L4', 'Lab L4', 'Building L Floor 4'),
 ('L3', 'Lab L3', 'Building L Floor 3'),
 ('L2', 'Lab L2', 'Building L Floor 2'),
 ('E4', 'Lab E4', 'Building E Floor 4');
+
+INSERT INTO users (
+    username,
+    PASSWORD,
+    full_name,
+    role_id,
+    lab_id,
+    STATUS
+)
+VALUES (
+    'admin_l4',
+    'dummyhash',
+    'Admin Lab L4',
+    1,
+    1,
+    'Active'
+);
+
+INSERT INTO documents (
+    purpose,
+    event_name,
+    requester_name,
+    requester_position,
+    approver_name,
+    approver_position,
+    total_user
+)
+VALUES (
+    'Peminjaman Fasilitas Laboratorium ISTTS',
+    'Acara XYZ',
+    'Budi Santoso',
+    'Ketua',
+    'Ir. Indah Andih, S.Kom., M.Kom.',
+    'Manager XYZ',
+    40
+);
+
+
+INSERT INTO document_items (
+    document_id,
+    item_name,
+    quantity,
+    start_time,
+    end_time,
+    revision_count
+)
+VALUES (
+    1,
+    'Monitor Lab L-204',
+    5,
+    '2025-03-28 08:30:00',
+    '2025-03-28 13:30:00',
+    0
+);
+
+
