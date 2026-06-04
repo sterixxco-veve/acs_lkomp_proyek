@@ -1,7 +1,6 @@
 CREATE DATABASE IF NOT EXISTS acs_lkomp;
 USE acs_lkomp;
 
-
 DROP USER IF EXISTS 'lkomp_admin'@'localhost';
 
 CREATE USER 'lkomp_admin'@'localhost'
