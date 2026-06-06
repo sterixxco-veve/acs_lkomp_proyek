@@ -251,6 +251,162 @@ CREATE TABLE maintenance_details (
         REFERENCES components(component_id)
 );
 
+CREATE TABLE peminjam (
+	id_peminjam INT PRIMARY KEY AUTO_INCREMENT, 
+	nama_peminjam VARCHAR(100) NOT NULL,
+	nrp VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE peminjaman (
+    peminjaman_id INT AUTO_INCREMENT PRIMARY KEY,
+
+    document_number VARCHAR(50) NOT NULL,
+
+    id_peminjam INT NOT NULL,
+
+    event_name VARCHAR(255) NOT NULL,
+
+    purpose TEXT NOT NULL,
+
+    total_user INT DEFAULT 0,
+
+    borrow_start DATETIME NOT NULL,
+
+    borrow_end DATETIME NOT NULL,
+
+    STATUS ENUM(
+        'Draft',
+        'Pending',
+        'Approved',
+        'Rejected',
+        'Completed'
+    ) DEFAULT 'Draft',
+
+    pdf_path VARCHAR(255),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (id_peminjam)
+    REFERENCES peminjam(id_peminjam)
+);
+
+CREATE TABLE detail_peminjaman (
+    detail_id INT AUTO_INCREMENT PRIMARY KEY,
+
+    peminjaman_id INT NOT NULL,
+
+    item_type ENUM(
+        'PC',
+        'COMPONENT'
+    ) NOT NULL,
+
+    reference_id INT NOT NULL,
+
+    item_name VARCHAR(255) NOT NULL,
+
+    quantity INT DEFAULT 1,
+
+    FOREIGN KEY (peminjaman_id)
+    REFERENCES peminjaman(peminjaman_id)
+    ON DELETE CASCADE
+);
+
+
+DROP PROCEDURE IF EXISTS get_peminjam;
+DELIMITER //
+CREATE PROCEDURE get_peminjam()
+BEGIN
+	SELECT * FROM peminjam;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS insert_peminjam;
+DELIMITER //
+CREATE PROCEDURE insert_peminjam(p_nama VARCHAR(100), p_nrp VARCHAR(100))
+BEGIN
+	INSERT INTO peminjam (
+	    nama_peminjam,
+	    nrp
+	)
+	VALUES (
+	    p_nama, p_nrp
+	);
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS insert_peminjaman;
+
+DELIMITER //
+
+CREATE PROCEDURE insert_peminjaman(
+    p_document_number VARCHAR(50),
+    p_id_peminjam INT,
+    p_event_name VARCHAR(255),
+    p_purpose TEXT,
+    p_total_user INT,
+    p_borrow_start DATETIME,
+    p_borrow_end DATETIME
+)
+BEGIN
+
+    INSERT INTO peminjaman(
+        document_number,
+        id_peminjam,
+        event_name,
+        purpose,
+        total_user,
+        borrow_start,
+        borrow_end
+    )
+    VALUES(
+        p_document_number,
+        p_id_peminjam,
+        p_event_name,
+        p_purpose,
+        p_total_user,
+        p_borrow_start,
+        p_borrow_end
+    );
+
+    SELECT LAST_INSERT_ID() AS peminjaman_id;
+
+END//
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS insert_detail_peminjaman;
+
+DELIMITER //
+
+CREATE PROCEDURE insert_detail_peminjaman(
+    p_peminjaman_id INT,
+    p_item_type VARCHAR(20),
+    p_reference_id INT,
+    p_item_name VARCHAR(255),
+    p_quantity INT
+)
+BEGIN
+
+    INSERT INTO detail_peminjaman(
+        peminjaman_id,
+        item_type,
+        reference_id,
+        item_name,
+        quantity
+    )
+    VALUES(
+        p_peminjaman_id,
+        p_item_type,
+        p_reference_id,
+        p_item_name,
+        p_quantity
+    );
+
+END//
+
+DELIMITER ;
+
 DELIMITER $$
 
 CREATE FUNCTION fn_total_pc_by_lab(p_lab_id INT)

@@ -95,6 +95,25 @@ function registerIpcHandlers() {
   ipcMain.handle('db:getLiveActivity', async () => {
     return await db.getLiveActivity()
   })
+  ipcMain.handle('db:getPeminjam', async () => {
+    return await db.getPeminjam()
+  })
+
+  ipcMain.handle('db:addPeminjam', async (_, data) => {
+    return await db.addPeminjam(data)
+  })
+
+  ipcMain.handle('db:createPeminjaman', async (_, data) => {
+    return await db.createPeminjaman(data)
+  })
+
+  ipcMain.handle('db:addDetailPeminjaman', async (_, data) => {
+    return await db.addDetailPeminjaman(data)
+  })
+
+  ipcMain.handle('db:getPeminjaman', async () => {
+    return await db.getPeminjaman()
+  })
 }
 
 app.whenReady().then(() => {

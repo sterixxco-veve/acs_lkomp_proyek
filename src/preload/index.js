@@ -30,7 +30,15 @@ const api = {
 
   getDashboardSummary: () => ipcRenderer.invoke('db:getDashboardSummary'),
 
-  getLiveActivity: () => ipcRenderer.invoke('db:getLiveActivity')
+  getLiveActivity: () => ipcRenderer.invoke('db:getLiveActivity'),
+  getPeminjam: () => ipcRenderer.invoke('db:getPeminjam'),
+  addPeminjam: (data) => ipcRenderer.invoke('db:addPeminjam', data),
+
+  createPeminjaman: (data) => ipcRenderer.invoke('db:createPeminjaman', data),
+
+  addDetailPeminjaman: (data) => ipcRenderer.invoke('db:addDetailPeminjaman', data),
+
+  getPeminjaman: () => ipcRenderer.invoke('db:getPeminjaman')
 }
 
 if (process.contextIsolated) {

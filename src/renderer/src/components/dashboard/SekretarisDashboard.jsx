@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { generatePdf } from "../../utils/generatePdf";
 
 const recentLetters = [
   {
@@ -18,6 +19,216 @@ const recentLetters = [
 ]
 
 export function SekretarisDashboard({ user }) {
+
+  const [peminjams, setPeminjams] = useState([])
+  const [selectedPeminjam, setSelectedPeminjam] = useState('')
+  const [selectedItems, setSelectedItems] = useState([])
+  const [eventName, setEventName] = useState('')
+  const [purpose, setPurpose] = useState('')
+  const [totalUser, setTotalUser] = useState(0)
+
+  const [startDate, setStartDate] = useState('')
+  const [startTime, setStartTime] = useState('')
+
+  const [endDate, setEndDate] = useState('')
+  const [endTime, setEndTime] = useState('')
+  const [tipePeminjaman, setTipePeminjaman] = useState('lab')
+  const [pcs, setPcs] = useState([])
+  const [selectedPC, setSelectedPC] = useState('')
+  const [selectedComponent, setSelectedComponent] = useState('')
+  const [qty, setQty] = useState(1)
+  const [components, setComponents] = useState([])
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const addItem = (item) => {
+    setSelectedItems([
+      ...selectedItems,
+      item
+    ])
+  }
+  const addPCToList = () => {
+    if (!selectedPC) {
+      alert('Pilih PC dulu')
+      return
+    }
+
+    const pc = pcs.find(
+      (p) => p.pc_id == selectedPC
+    )
+
+    if (!pc) return
+
+    setSelectedItems([
+      ...selectedItems,
+      {
+        item_type: 'PC',
+        reference_id: pc.pc_id,
+        item_name: pc.pc_code,
+        quantity: 1
+      }
+    ])
+  }
+
+  const addComponentToList = () => {
+    if (!selectedComponent) {
+      alert('Pilih Component dulu')
+      return
+    }
+
+    const component = components.find(
+      (c) => c.component_id == selectedComponent
+    )
+
+    if (!component) return
+
+    setSelectedItems([
+      ...selectedItems,
+      {
+        item_type: 'COMPONENT',
+        reference_id: component.component_id,
+        item_name: component.component_name,
+        quantity: qty
+      }
+    ])
+  }
+
+  const removeItem = (index) => {
+    setSelectedItems(
+      selectedItems.filter((_, i) => i !== index)
+    )
+  }
+  const loadData = async () => {
+    const peminjam = await window.api.getPeminjam()
+    const pcsData = await window.api.getPCs()
+    const componentsData = await window.api.getComponents()
+
+    setPeminjams(peminjam)
+    setPcs(pcsData)
+    setComponents(componentsData)
+  }
+
+  const loadPeminjam = async () => {
+    try {
+      const result = await window.api.getPeminjam()
+      setPeminjams(result)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  useEffect(() => {
+    loadPeminjam()
+  }, [])
+
+  const startDateTime =
+    `${startDate} ${startTime}:00`
+
+  const endDateTime =
+    `${endDate} ${endTime}:00`
+  const handleSubmit = async () => {
+    if (!selectedPeminjam) {
+      alert('Pilih peminjam')
+      return
+    }
+
+    if (
+      tipePeminjaman === 'item' &&
+      selectedItems.length === 0
+    ) {
+      alert('Tambahkan item terlebih dahulu')
+      return
+    }
+    try {
+      const now = new Date();
+
+      const nomorSurat =
+        `LKOMP/${String(now.getMonth() + 1).padStart(2, "0")
+        }/${now.getFullYear()
+        }/${Date.now().toString().slice(-4)
+        }`;
+
+      const peminjaman =
+        await window.api.createPeminjaman({
+          document_number: nomorSurat,
+          id_peminjam: selectedPeminjam,
+          event_name: eventName,
+          purpose: purpose,
+          total_user: totalUser,
+          borrow_start: startDateTime,
+          borrow_end: endDateTime
+        })
+
+      const peminjamanId =
+        peminjaman.peminjaman_id
+
+      for (const item of selectedItems) {
+        await window.api.addDetailPeminjaman({
+          peminjaman_id: peminjamanId,
+          item_type: item.item_type,
+          reference_id: item.reference_id,
+          item_name: item.item_name,
+          quantity: item.quantity
+        })
+      }
+
+      const selectedBorrower =
+        peminjams.find(
+          (p) =>
+            p.id_peminjam == selectedPeminjam
+        );
+
+      await generatePdf({
+        nomorSurat,
+
+        peminjam:
+          selectedBorrower?.nama_peminjam || "",
+
+        eventName,
+
+        purpose,
+
+        totalUser,
+
+        borrowStart: startDateTime,
+
+        borrowEnd: endDateTime,
+
+        items: selectedItems
+      });
+
+      alert('Surat berhasil disimpan')
+
+      setSelectedItems([]);
+
+      setSelectedPeminjam("");
+
+      setEventName("");
+
+      setPurpose("");
+
+      setTotalUser(0);
+
+      setStartDate("");
+
+      setStartTime("");
+
+      setEndDate("");
+
+      setEndTime("");
+
+      alert("Surat berhasil dibuat");
+    } catch (err) {
+      console.error("ERROR SURAT:", err)
+
+      alert(
+        "Gagal menyimpan surat\n\n" +
+        (err?.message || JSON.stringify(err))
+      )
+    }
+  }
   return (
     <div className="min-h-screen bg-[#F5F7FB]">
       {/* TOPBAR */}
@@ -77,8 +288,23 @@ export function SekretarisDashboard({ user }) {
                 Pilih Peminjam *
               </label>
 
-              <select className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 text-[#1E293B] outline-none">
-                <option>Pilih dari Master Peminjam</option>
+              <select
+                value={selectedPeminjam}
+                onChange={(e) => setSelectedPeminjam(e.target.value)}
+                className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 text-[#1E293B] outline-none"
+              >
+                <option value="">
+                  Pilih dari Master Peminjam
+                </option>
+
+                {peminjams.map((peminjam) => (
+                  <option
+                    key={peminjam.id_peminjam}
+                    value={peminjam.id_peminjam}
+                  >
+                    {peminjam.nama_peminjam} ({peminjam.nrp})
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -93,94 +319,289 @@ export function SekretarisDashboard({ user }) {
                 Tipe Peminjaman *
               </label>
 
+              {/* JADWAL PEMINJAMAN */}
+              <div className="bg-slate-50 rounded-2xl p-5 mb-6">
+                <h3 className="font-bold text-[#1E293B] mb-4 text-lg">
+                  📅 Jadwal Peminjaman
+                </h3>
+
+                {/* Tanggal */}
+                <div className="grid grid-cols-2 gap-5 mb-5">
+                  <div>
+                    <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
+                      Tanggal Mulai *
+                    </label>
+
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) =>
+                        setStartDate(e.target.value)
+                      }
+                      className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-white px-4"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
+                      Tanggal Selesai *
+                    </label>
+
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) =>
+                        setEndDate(e.target.value)
+                      }
+                      className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-white px-4"
+                    />
+                  </div>
+                </div>
+
+                {/* Jam */}
+                <div className="grid grid-cols-2 gap-5">
+                  <div>
+                    <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
+                      Jam Mulai *
+                    </label>
+
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) =>
+                        setStartTime(e.target.value)
+                      }
+                      className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-white px-4"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
+                      Jam Selesai *
+                    </label>
+
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) =>
+                        setEndTime(e.target.value)
+                      }
+                      className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-white px-4"
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <button className="border-2 border-[#5D7CEB] bg-blue-50 rounded-2xl p-5 text-center">
-                  <h4 className="font-bold text-[#5D7CEB]">Peminjaman Lab</h4>
+                <button
+                  type="button"
+                  onClick={() => setTipePeminjaman('lab')}
+                  className={`rounded-2xl p-5 text-center border-2 transition-all ${tipePeminjaman === 'lab'
+                    ? 'border-[#5D7CEB] bg-blue-50'
+                    : 'border-[#CBD5E1]'
+                    }`}
+                >
+                  <h4
+                    className={`font-bold ${tipePeminjaman === 'lab'
+                      ? 'text-[#5D7CEB]'
+                      : 'text-[#1E293B]'
+                      }`}
+                  >
+                    Peminjaman Lab
+                  </h4>
 
-                  <p className="text-sm text-[#64748B] mt-1">Satu laboratorium lengkap</p>
+                  <p className="text-sm text-[#64748B] mt-1">
+                    Satu laboratorium lengkap
+                  </p>
                 </button>
 
-                <button className="border border-[#CBD5E1] rounded-2xl p-5 text-center hover:border-[#5D7CEB] transition-all">
-                  <h4 className="font-bold text-[#1E293B]">Peminjaman Item</h4>
+                <button
+                  type="button"
+                  onClick={() => setTipePeminjaman('item')}
+                  className={`rounded-2xl p-5 text-center border-2 transition-all ${tipePeminjaman === 'item'
+                    ? 'border-[#5D7CEB] bg-blue-50'
+                    : 'border-[#CBD5E1]'
+                    }`}
+                >
+                  <h4
+                    className={`font-bold ${tipePeminjaman === 'item'
+                      ? 'text-[#5D7CEB]'
+                      : 'text-[#1E293B]'
+                      }`}
+                  >
+                    Peminjaman Item
+                  </h4>
 
-                  <p className="text-sm text-[#64748B] mt-1">Pilih perangkat tertentu</p>
+                  <p className="text-sm text-[#64748B] mt-1">
+                    Pilih perangkat tertentu
+                  </p>
                 </button>
               </div>
 
-              {/* GRID */}
-              <div className="grid grid-cols-2 gap-5 mb-5">
-                <div>
-                  <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
-                    Laboratorium *
-                  </label>
+              {tipePeminjaman === 'lab' && (
+                <>
+                  {/* Laboratorium */}
+                  <div className="grid grid-cols-2 gap-5 mb-5">
+                    <div>
+                      <label className="text-sm font-semibold block mb-2">
+                        Laboratorium *
+                      </label>
 
-                  <select className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4">
-                    <option>Pilih Lab</option>
-                  </select>
-                </div>
+                      <select className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4">
+                        <option>Pilih Lab</option>
+                        <option>L4</option>
+                        <option>L3</option>
+                        <option>L2</option>
+                        <option>E4</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
-                    Jumlah Peserta
-                  </label>
+                    <div>
+                      <label className="text-sm font-semibold block mb-2">
+                        Jumlah Peserta
+                      </label>
 
-                  <input
-                    type="number"
-                    defaultValue={35}
-                    className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4"
-                  />
-                </div>
-              </div>
+                      <input
+                        type="number"
+                        value={totalUser}
+                        onChange={(e) =>
+                          setTotalUser(e.target.value)
+                        }
+                        className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* DATE */}
-              <div className="grid grid-cols-2 gap-5 mb-5">
-                <div>
-                  <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
-                    📅 Tanggal Mulai *
-                  </label>
+              {tipePeminjaman === 'item' && (
+                <>
+                  {/* PC */}
+                  <div className="mb-5">
+                    <label className="text-sm font-semibold block mb-2">
+                      Pilih PC
+                    </label>
 
-                  <input
-                    type="date"
-                    className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4"
-                  />
-                </div>
+                    <div className="flex gap-3">
+                      <select
+                        value={selectedPC}
+                        onChange={(e) =>
+                          setSelectedPC(e.target.value)
+                        }
+                        className="flex-1 h-[52px] rounded-2xl border border-[#E2E8F0] px-4"
+                      >
+                        <option value="">
+                          Pilih PC
+                        </option>
 
-                <div>
-                  <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
-                    📅 Tanggal Selesai *
-                  </label>
+                        {pcs.map((pc) => (
+                          <option
+                            key={pc.pc_id}
+                            value={pc.pc_id}
+                          >
+                            {pc.pc_code}
+                          </option>
+                        ))}
+                      </select>
 
-                  <input
-                    type="date"
-                    className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4"
-                  />
-                </div>
-              </div>
+                      <button
+                        type="button"
+                        onClick={addPCToList}
+                        className="px-5 rounded-2xl bg-blue-500 text-white"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
 
-              {/* TIME */}
-              <div className="grid grid-cols-2 gap-5 mb-5">
-                <div>
-                  <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
-                    ⏰ Jam Mulai *
-                  </label>
+                  {/* COMPONENT */}
+                  <div className="mb-5">
+                    <label className="text-sm font-semibold block mb-2">
+                      Pilih Component
+                    </label>
 
-                  <input
-                    type="time"
-                    className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4"
-                  />
-                </div>
+                    <div className="flex gap-3">
+                      <select
+                        value={selectedComponent}
+                        onChange={(e) =>
+                          setSelectedComponent(e.target.value)
+                        }
+                        className="flex-1 h-[52px] rounded-2xl border border-[#E2E8F0] px-4"
+                      >
+                        <option value="">
+                          Pilih Component
+                        </option>
 
-                <div>
-                  <label className="text-sm font-semibold text-[#1E293B] mb-2 block">
-                    ⏰ Jam Selesai *
-                  </label>
+                        {components.map((component) => (
+                          <option
+                            key={component.component_id}
+                            value={component.component_id}
+                          >
+                            {component.component_name}
+                          </option>
+                        ))}
+                      </select>
 
-                  <input
-                    type="time"
-                    className="w-full h-[52px] rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4"
-                  />
-                </div>
-              </div>
+                      <input
+                        type="number"
+                        min="1"
+                        value={qty}
+                        onChange={(e) =>
+                          setQty(e.target.value)
+                        }
+                        className="w-24 h-[52px] rounded-2xl border border-[#E2E8F0] px-4"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={addComponentToList}
+                        className="px-5 rounded-2xl bg-blue-500 text-white"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Keranjang */}
+                  <div className="bg-slate-50 rounded-2xl p-4">
+                    <h3 className="font-bold mb-4">
+                      Item Dipilih
+                    </h3>
+
+                    {selectedItems.length === 0 && (
+                      <p className="text-slate-500">
+                        Belum ada item dipilih
+                      </p>
+                    )}
+
+                    {selectedItems.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center bg-white rounded-xl p-3 mb-2"
+                      >
+                        <div>
+                          <div className="font-semibold">
+                            {item.item_name}
+                          </div>
+
+                          <div className="text-sm text-slate-500">
+                            Qty: {item.quantity}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeItem(index)
+                          }
+                          className="text-red-500"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
 
               {/* TEXTAREA */}
               <div className="mb-8">
@@ -190,7 +611,10 @@ export function SekretarisDashboard({ user }) {
 
                 <textarea
                   rows={5}
-                  defaultValue="Praktikum Pemrograman Web - Kelas TI-3A"
+                  value={purpose}
+                  onChange={(e) =>
+                    setPurpose(e.target.value)
+                  }
                   className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4 resize-none"
                 />
               </div>
@@ -201,7 +625,10 @@ export function SekretarisDashboard({ user }) {
                   Reset Form
                 </button>
 
-                <button className="flex-1 h-[52px] rounded-2xl bg-[#5D7CEB] hover:bg-[#4C6BE0] text-white font-semibold transition-all">
+                <button
+                  onClick={handleSubmit}
+                  className="flex-1 h-[52px] rounded-2xl bg-[#5D7CEB] hover:bg-[#4C6BE0] text-white font-semibold transition-all"
+                >
                   ✈ Buat Surat
                 </button>
               </div>
