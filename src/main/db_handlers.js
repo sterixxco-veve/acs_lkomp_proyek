@@ -142,6 +142,31 @@ export async function getAllPCs(labId = null) {
   }
 }
 
+export async function getPeminjam() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT *
+      FROM peminjam
+      ORDER BY nama_peminjam ASC
+    `)
+
+    return rows
+  } catch (err) {
+    console.error(err)
+    return []
+  }
+}
+
+export async function addPeminjam(data) {
+  console.log('INSERT PEMINJAM:', data)
+
+  const [result] = await pool.query('CALL insert_peminjam(?, ?)', [data.nama_peminjam, data.nrp])
+
+  console.log(result)
+
+  return result
+}
+
 export async function addPC(data) {
   try {
     await pool.query('CALL sp_add_pc(?, ?, ?, ?, ?, ?)', [
@@ -383,12 +408,80 @@ export async function getLiveActivity() {
   }
 }
 
+// ========================================
+// PEMINJAMAN
+// ========================================
+
+export async function createPeminjaman(data) {
+  try {
+    const [result] = await pool.query('CALL insert_peminjaman(?, ?, ?, ?, ?, ?, ?)', [
+      data.document_number,
+      data.id_peminjam,
+      data.event_name,
+      data.purpose,
+      data.total_user,
+      data.borrow_start,
+      data.borrow_end
+    ])
+
+    return result[0][0]
+  } catch (err) {
+    console.error(err)
+    throw err
+  }
+}
+
+export async function addDetailPeminjaman(data) {
+  try {
+    await pool.query('CALL insert_detail_peminjaman(?, ?, ?, ?, ?)', [
+      data.peminjaman_id,
+      data.item_type,
+      data.reference_id,
+      data.item_name,
+      data.quantity
+    ])
+
+    return {
+      success: true
+    }
+  } catch (err) {
+    console.error(err)
+    throw err
+  }
+}
+
+export async function getPeminjaman() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        p.*,
+        pm.nama_peminjam
+      FROM peminjaman p
+      JOIN peminjam pm
+        ON p.id_peminjam = pm.id_peminjam
+      ORDER BY p.created_at DESC
+    `)
+
+    return rows
+  } catch (err) {
+    console.error(err)
+    return []
+  }
+}
+
 export default {
   register,
   login,
 
   getAllPCs,
   addPC,
+
+  getPeminjam,
+  addPeminjam,
+
+  createPeminjaman,
+  addDetailPeminjaman,
+  getPeminjaman,
 
   getComponents,
   addComponent,
