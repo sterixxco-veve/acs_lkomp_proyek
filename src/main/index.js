@@ -114,6 +114,14 @@ function registerIpcHandlers() {
   ipcMain.handle('db:getPeminjaman', async () => {
     return await db.getPeminjaman()
   })
+
+  ipcMain.handle('db:getPeminjamanDetail', async (_, id) => {
+    return await db.getPeminjamanDetail(id)
+  })
+
+  ipcMain.handle('db:returnItem', async (_, detailId) => {
+    return await db.returnItem(detailId)
+  })
 }
 
 app.whenReady().then(() => {

@@ -3,36 +3,37 @@ import React, { useState, useEffect } from "react";
 
 export default function MasterPeminjam() {
   const [peminjams, setPeminjams] = useState([]);
-  
+
   const loadPeminjam = async () => {
     try {
       const result = await window.api.getPeminjam();
-      
+
       setPeminjams(
         result.map((item) => ({
           id: item.id_peminjam,
           namaLengkap: item.nama_peminjam,
           nrpNid: item.nrp,
-          totalPeminjaman: 0
+          kategori: item.kategori,
+          totalPeminjaman: item.total_peminjaman
         }))
-      );
+      )
     } catch (err) {
       console.error("Gagal mengambil data peminjam:", err);
     }
   };
-  
-    useEffect(() => {
-      loadPeminjam();
-    }, []);
-  
+
+  useEffect(() => {
+    loadPeminjam();
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     nama_peminjam: "",
     nrp: "",
   });
-  
+
   const filteredPeminjams = peminjams.filter(
     (p) =>
       p.namaLengkap.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -48,7 +49,7 @@ export default function MasterPeminjam() {
     setShowForm(true);
   };
 
- const handleSave = async () => {
+  const handleSave = async () => {
     if (!formData.nama_peminjam || !formData.nrp) {
       alert("Semua field wajib diisi");
       return;
@@ -58,6 +59,7 @@ export default function MasterPeminjam() {
       await window.api.addPeminjam({
         nama_peminjam: formData.nama_peminjam,
         nrp: formData.nrp,
+        kategori: formData.kategori
       });
 
       await loadPeminjam();
@@ -73,7 +75,7 @@ export default function MasterPeminjam() {
       alert("Gagal menyimpan data");
     }
   };
-  
+
   const handleEdit = (peminjam) => {
     const namaLengkap = prompt(
       "Edit Nama Lengkap",
@@ -93,10 +95,10 @@ export default function MasterPeminjam() {
       peminjams.map((p) =>
         p.id === peminjam.id
           ? {
-              ...p,
-              namaLengkap,
-              nrpNid,
-            }
+            ...p,
+            namaLengkap,
+            nrpNid,
+          }
           : p
       )
     );
@@ -116,6 +118,7 @@ export default function MasterPeminjam() {
 
   return (
     <div className="p-6">
+      <style>{`body {color: #9094a0; }`}</style>
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -169,6 +172,10 @@ export default function MasterPeminjam() {
               </th>
 
               <th className="text-center p-4">
+                Kategori
+              </th>
+
+              <th className="text-center p-4">
                 Total Peminjaman
               </th>
 
@@ -201,8 +208,19 @@ export default function MasterPeminjam() {
                 </td>
 
                 <td className="p-4 text-center">
+                  <span
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${peminjam.kategori === "Dosen"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-purple-100 text-purple-700"
+                      }`}
+                  >
+                    {peminjam.kategori}
+                  </span>
+                </td>
+
+                <td className="p-4 text-center">
                   <span className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-semibold">
-                    {peminjam.totalPeminjaman}x
+                    {peminjam.totalPeminjaman || 0}x
                   </span>
                 </td>
 
@@ -283,6 +301,35 @@ export default function MasterPeminjam() {
                   className="w-full border rounded-xl px-4 py-3"
                   placeholder="Masukkan NRP atau NID"
                 />
+              </div>
+
+              <div>
+                <label className="block mb-2 font-medium">
+                  Kategori
+                </label>
+
+                <select
+                  value={formData.kategori}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      kategori: e.target.value
+                    })
+                  }
+                  className="w-full border rounded-xl px-4 py-3"
+                >
+                  <option value="">
+                    Pilih Kategori
+                  </option>
+
+                  <option value="Mahasiswa">
+                    Mahasiswa
+                  </option>
+
+                  <option value="Dosen">
+                    Dosen
+                  </option>
+                </select>
               </div>
             </div>
 

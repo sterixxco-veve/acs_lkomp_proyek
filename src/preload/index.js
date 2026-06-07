@@ -38,7 +38,9 @@ const api = {
 
   addDetailPeminjaman: (data) => ipcRenderer.invoke('db:addDetailPeminjaman', data),
 
-  getPeminjaman: () => ipcRenderer.invoke('db:getPeminjaman')
+  getPeminjaman: () => ipcRenderer.invoke('db:getPeminjaman'),
+  getPeminjamanDetail: (id) => ipcRenderer.invoke('db:getPeminjamanDetail', id),
+  returnItem: (detailId) => ipcRenderer.invoke('db:returnItem', detailId)
 }
 
 if (process.contextIsolated) {
