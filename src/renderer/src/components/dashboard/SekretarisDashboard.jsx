@@ -278,6 +278,7 @@ export function SekretarisDashboard({ user }) {
           </div>
         </div>
 
+
         <div className="p-6">
           {/* HERO */}
           <div className="bg-gradient-to-r from-[#30408D] to-[#5D7CEB] rounded-3xl shadow-lg px-6 py-6 flex items-center gap-5 mb-6">
