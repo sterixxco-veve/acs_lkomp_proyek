@@ -160,7 +160,11 @@ export async function getPeminjam() {
 export async function addPeminjam(data) {
   console.log('INSERT PEMINJAM:', data)
 
-  const [result] = await pool.query('CALL insert_peminjam(?, ?)', [data.nama_peminjam, data.nrp])
+  const [result] = await pool.query('CALL insert_peminjam(?, ?, ?)', [
+    data.nama_peminjam,
+    data.nrp,
+    data.kategori
+  ])
 
   console.log(result)
 
@@ -458,14 +462,39 @@ export async function getPeminjaman() {
         pm.nama_peminjam
       FROM peminjaman p
       JOIN peminjam pm
-        ON p.id_peminjam = pm.id_peminjam
+      ON p.id_peminjam = pm.id_peminjam
       ORDER BY p.created_at DESC
     `)
+
+    console.log('GET PEMINJAMAN', rows)
 
     return rows
   } catch (err) {
     console.error(err)
     return []
+  }
+}
+
+export async function getPeminjamanDetail(peminjamanId) {
+  const [rows] = await pool.query(
+    `
+    SELECT *
+    FROM detail_peminjaman
+    WHERE peminjaman_id = ?
+    `,
+    [peminjamanId]
+  )
+
+  console.log('DETAIL:', rows)
+
+  return rows
+}
+
+export async function returnItem(detailId) {
+  await pool.query('CALL return_item(?)', [detailId])
+
+  return {
+    success: true
   }
 }
 
@@ -482,6 +511,8 @@ export default {
   createPeminjaman,
   addDetailPeminjaman,
   getPeminjaman,
+  getPeminjamanDetail,
+  returnItem,
 
   getComponents,
   addComponent,

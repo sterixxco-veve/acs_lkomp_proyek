@@ -29,7 +29,8 @@ export function Sidebar({ user, activeMenu, setActiveMenu, onLogout }) {
   if (user.role_name === 'Sekretaris') {
     menuItems.push(
       'Surat Peminjaman',
-      'Master Peminjam'
+      'Master Peminjam',
+      'Laporan Peminjaman'
     )
   }
 
@@ -47,11 +48,10 @@ export function Sidebar({ user, activeMenu, setActiveMenu, onLogout }) {
               key={item}
               type="button"
               onClick={() => setActiveMenu(item)}
-              className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                activeMenu === item
+              className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeMenu === item
                   ? 'bg-[#5D7CEB] shadow-lg'
                   : 'hover:bg-white/10'
-              }`}
+                }`}
             >
               {item}
             </button>

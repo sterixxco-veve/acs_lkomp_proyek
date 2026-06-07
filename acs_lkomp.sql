@@ -258,6 +258,12 @@ CREATE TABLE peminjam (
 	nrp VARCHAR(100) NOT NULL
 );
 
+ALTER TABLE peminjam
+ADD kategori ENUM(
+  'Mahasiswa',
+  'Dosen'
+) NOT NULL;
+
 CREATE TABLE peminjaman (
     peminjaman_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -291,6 +297,11 @@ CREATE TABLE peminjaman (
     REFERENCES peminjam(id_peminjam)
 );
 
+ALTER TABLE peminjaman
+DROP COLUMN pdf_path;
+ALTER TABLE peminjaman
+DROP COLUMN STATUS;
+
 CREATE TABLE detail_peminjaman (
     detail_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -312,25 +323,102 @@ CREATE TABLE detail_peminjaman (
     ON DELETE CASCADE
 );
 
+ALTER TABLE detail_peminjaman
+ADD COLUMN STATUS ENUM(
+    'Issued',
+    'Returned'
+) DEFAULT 'Issued';
+
+ALTER TABLE detail_peminjaman
+ADD COLUMN returned_at DATETIME NULL;
+
+DROP PROCEDURE IF EXISTS return_item;
+DELIMITER //
+
+CREATE PROCEDURE return_item(
+    p_detail_id INT
+)
+BEGIN
+    UPDATE detail_peminjaman
+    SET
+        STATUS = 'Returned',
+        returned_at = NOW()
+    WHERE detail_id = p_detail_id;
+END//
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_peminjaman;
+DELIMITER //
+CREATE PROCEDURE get_peminjaman()
+BEGIN
+	SELECT
+	    p.peminjaman_id,
+	    p.document_number,
+	    pm.nama_peminjam,
+	    p.borrow_start,
+	    p.borrow_end,
+	    p.status
+	FROM peminjaman p
+	JOIN peminjam pm
+	    ON pm.id_peminjam = p.id_peminjam
+	ORDER BY p.created_at DESC;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_peminjaman_detail;
+DELIMITER //
+CREATE PROCEDURE get_peminjaman_detail(p_peminjaman_id VARCHAR(100))
+BEGIN
+	SELECT
+	    d.detail_id,
+	    d.item_name,
+	    d.quantity,
+	    d.status,
+	    d.returned_at
+	FROM detail_peminjaman d
+	WHERE d.peminjaman_id = p_peminjaman_id;
+END//
+DELIMITER ;
 
 DROP PROCEDURE IF EXISTS get_peminjam;
 DELIMITER //
 CREATE PROCEDURE get_peminjam()
 BEGIN
-	SELECT * FROM peminjam;
+	SELECT
+    p.id_peminjam,
+    p.nama_peminjam,
+    p.nrp,
+    p.kategori,
+
+    COUNT(pm.peminjaman_id) AS total_peminjaman
+
+FROM peminjam p
+
+LEFT JOIN peminjaman pm
+    ON pm.id_peminjam = p.id_peminjam
+
+GROUP BY
+    p.id_peminjam,
+    p.nama_peminjam,
+    p.nrp,
+    p.kategori
+
+ORDER BY p.nama_peminjam;
 END//
 DELIMITER ;
 
 DROP PROCEDURE IF EXISTS insert_peminjam;
 DELIMITER //
-CREATE PROCEDURE insert_peminjam(p_nama VARCHAR(100), p_nrp VARCHAR(100))
+CREATE PROCEDURE insert_peminjam(p_nama VARCHAR(100), p_nrp VARCHAR(100), p_kategori VARCHAR(100))
 BEGIN
 	INSERT INTO peminjam (
 	    nama_peminjam,
-	    nrp
+	    nrp,
+	   kategori
 	)
 	VALUES (
-	    p_nama, p_nrp
+	    p_nama, p_nrp, p_kategori
 	);
 END//
 DELIMITER ;

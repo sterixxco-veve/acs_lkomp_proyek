@@ -6,6 +6,7 @@ import { SuperAdminDashboard } from '../components/dashboard/SuperAdminDashboard
 import { LabAdminDashboard } from '../components/dashboard/LabAdminDashboard'
 import { SekretarisDashboard } from '../components/dashboard/SekretarisDashboard'
 import MasterPeminjam from '../components/MasterPeminjam'
+import PengembalianDashboard from '../components/PengembalianDashboard'
 
 export function Dashboard({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Surat Peminjaman')
@@ -54,6 +55,9 @@ export function Dashboard({ user, onLogout }) {
 
             {activeMenu === 'Master Peminjam' && (
               <MasterPeminjam />
+            )}
+            {activeMenu === 'Laporan Peminjaman' && (
+              <PengembalianDashboard />
             )}
           </>
         )}
