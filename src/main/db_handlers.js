@@ -68,6 +68,7 @@ export async function login({ username, password }) {
 
     if (rows.length === 0) {
       return {
+        // success: false,
         success: true,
         user: {
           user_id: 1,
@@ -122,6 +123,7 @@ export async function getAllPCs(labId = null) {
         l.lab_name
       FROM pcs p
       JOIN labs l ON p.lab_id = l.lab_id
+      WHERE p.is_deleted = FALSE
     `
 
     let params = []
@@ -190,6 +192,33 @@ export async function addPC(data) {
       success: false,
       message: err.message
     }
+  }
+}
+
+export async function updatePC(data) {
+  try {
+    await pool.query('CALL sp_update_pc(?, ?, ?, ?, ?, ?, ?, ?)', [
+      data.pc_id,
+      data.pc_code,
+      data.lab_id,
+      data.processor,
+      data.ram,
+      data.storage,
+      data.gpu,
+      data.status
+    ])
+    return { success: true }
+  } catch (err) {
+    return { success: false, message: err.message }
+  }
+}
+
+export async function deletePC(pcId) {
+  try {
+    await pool.query('CALL sp_soft_delete_pc(?)', [pcId])
+    return { success: true }
+  } catch (err) {
+    return { success: false, message: err.message }
   }
 }
 
@@ -504,6 +533,8 @@ export default {
 
   getAllPCs,
   addPC,
+  updatePC,
+  deletePC,
 
   getPeminjam,
   addPeminjam,
