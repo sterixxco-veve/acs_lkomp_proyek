@@ -53,10 +53,10 @@ export const MasterPC = ({ user }) => {
 
     // Simulasi narik data master lab (bisa disesuaikan nanti)
     setLabs([
-      { id: 1, name: 'E4' },
-      { id: 2, name: 'L4' },
-      { id: 3, name: 'L3' },
-      { id: 4, name: 'L2' }
+      { id: 1, name: 'L4' },
+      { id: 2, name: 'L3' },
+      { id: 3, name: 'L2' },
+      { id: 4, name: 'E4' }
     ])
   }
 

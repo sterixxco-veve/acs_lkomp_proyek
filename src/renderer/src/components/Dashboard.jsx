@@ -7,17 +7,28 @@ import { LabAdminDashboard } from '../components/dashboard/LabAdminDashboard'
 import { SekretarisDashboard } from '../components/dashboard/SekretarisDashboard'
 import MasterPeminjam from '../components/MasterPeminjam'
 import PengembalianDashboard from '../components/PengembalianDashboard'
-import { MaintenanceTransaction } from '../components/MaintenanceTransaction'
-import { Reports } from '../components/Reports'
+import { TvDashboard } from '../components/TvDashboard'
 
 export function Dashboard({ user, onLogout }) {
-  const [activeMenu, setActiveMenu] = useState('Surat Peminjaman')
-
   const isSuperAdmin = user.role_name === 'SuperAdmin'
   const isSekretaris = user.role_name === 'Sekretaris'
   const isAdminLab =
     user.role_name.includes('Admin') &&
     user.role_name !== 'SuperAdmin'
+
+  const [activeMenu, setActiveMenu] = useState(
+    isSekretaris ? 'Surat Peminjaman' : 'Dashboard'
+  )
+
+  if (activeMenu === 'TV Dashboard') {
+    return (
+      <TvDashboard 
+        user={user} 
+        onBack={() => setActiveMenu('Dashboard')} 
+        onLogout={onLogout} 
+      />
+    )
+  }
 
   return (
     <div className="flex bg-[#F5F7FB] min-h-screen">
@@ -30,7 +41,7 @@ export function Dashboard({ user, onLogout }) {
 
       <div className="flex-1 overflow-y-auto">
         {/* SUPER ADMIN */}
-        {isSuperAdmin && activeMenu === 'Dashboard' && (
+        {isSuperAdmin && (
           <SuperAdminDashboard
             user={user}
             activeMenu={activeMenu}
@@ -38,19 +49,11 @@ export function Dashboard({ user, onLogout }) {
         )}
 
         {/* ADMIN LAB */}
-        {isAdminLab && activeMenu === 'Dashboard' && (
+        {isAdminLab && (
           <LabAdminDashboard
             user={user}
             activeMenu={activeMenu}
           />
-        )}
-
-        {(isSuperAdmin || isAdminLab) && activeMenu === 'Maintenance' && (
-          <MaintenanceTransaction user={user} />
-        )}
-        
-        {(isSuperAdmin || isAdminLab) && activeMenu === 'Reports' && (
-          <Reports user={user} />
         )}
 
         {/* SEKRETARIS */}

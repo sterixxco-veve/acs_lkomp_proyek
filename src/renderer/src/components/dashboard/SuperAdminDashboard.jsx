@@ -3,6 +3,8 @@ import React from 'react'
 import { MasterPC } from '../MasterPC'
 import { MasterComponents } from '../MasterComponents'
 import { MasterSoftware } from '../MasterSoftware'
+import { MaintenanceTransaction } from '../MaintenanceTransaction'
+import { Reports } from '../Reports'
 
 export const SuperAdminDashboard = ({ user, activeMenu }) => {
   return (
@@ -42,10 +44,15 @@ export const SuperAdminDashboard = ({ user, activeMenu }) => {
         </div>
       )}
 
-      {/* Tambahkan untuk menu lainnya nanti (Maintenance, Reports, dll) */}
       {activeMenu === 'Maintenance' && (
-        <div className="bg-white rounded-3xl p-8 shadow-sm">
-          <h2 className="text-2xl font-bold">Halaman Maintenance (Coming Soon)</h2>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <MaintenanceTransaction user={user} />
+        </div>
+      )}
+
+      {activeMenu === 'Reports' && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Reports user={user} />
         </div>
       )}
     </div>

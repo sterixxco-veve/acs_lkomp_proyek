@@ -11,6 +11,7 @@ export function Sidebar({ user, activeMenu, setActiveMenu, onLogout }) {
       'Software',
       'Maintenance',
       'Reports',
+      'TV Dashboard',
       'Users'
     )
   }
@@ -22,7 +23,8 @@ export function Sidebar({ user, activeMenu, setActiveMenu, onLogout }) {
       'Components',
       'Software',
       'Maintenance',
-      'Reports'
+      'Reports',
+      'TV Dashboard'
     )
   }
 
