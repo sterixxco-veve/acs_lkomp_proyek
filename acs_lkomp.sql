@@ -905,3 +905,21 @@ BEGIN
     WHERE component_id = p_id;
 END $$
 DELIMITER ;
+
+
+
+INSERT INTO pcs
+(pc_code, lab_id, processor, ram, STORAGE, gpu, STATUS)
+VALUES
+('PC-L4-001', 1, 'Intel i5', '8GB', '256 SSD', 'Intel UHD', 'Usable');
+
+
+INSERT INTO components
+(component_name, brand, TYPE, stock, min_stock, condition_status)
+VALUES
+('RAM DDR4 8GB', 'Kingston', 'RAM', 20, 5, 'New');
+
+(software_name, VERSION, mata_kuliah, license_type)
+VALUES
+('Visual Studio Code','1.100','Pemrograman','Free');
+

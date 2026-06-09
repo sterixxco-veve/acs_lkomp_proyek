@@ -11,7 +11,8 @@ export function Sidebar({ user, activeMenu, setActiveMenu, onLogout }) {
       'Software',
       'Maintenance',
       'Reports',
-      'Users'
+      'Users',
+      'Settings'
     )
   }
 
@@ -22,7 +23,8 @@ export function Sidebar({ user, activeMenu, setActiveMenu, onLogout }) {
       'Components',
       'Software',
       'Maintenance',
-      'Reports'
+      'Reports',
+      'Settings'
     )
   }
 
