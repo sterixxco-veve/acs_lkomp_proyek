@@ -52,6 +52,14 @@ function registerIpcHandlers() {
     return await db.addPC(data)
   })
 
+  ipcMain.handle('db:updatePC', async (_, data) => {
+    return await db.updatePC(data)
+  })
+
+  ipcMain.handle('db:deletePC', async (_, id) => {
+    return await db.deletePC(id)
+  })
+
   ipcMain.handle('db:getComponents', async () => {
     return await db.getComponents()
   })

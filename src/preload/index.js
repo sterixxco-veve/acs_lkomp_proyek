@@ -10,6 +10,10 @@ const api = {
 
   addPC: (data) => ipcRenderer.invoke('db:addPC', data),
 
+  updatePC: (data) => ipcRenderer.invoke('db:updatePC', data),
+
+  deletePC: (data) => ipcRenderer.invoke('db:deletePC', id),
+
   getComponents: () => ipcRenderer.invoke('db:getComponents'),
 
   addComponent: (data) => ipcRenderer.invoke('db:addComponent', data),

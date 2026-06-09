@@ -816,3 +816,45 @@ VALUES (
 );
 
 
+-- tambahan
+-- 1. Tambah kolom soft delete
+ALTER TABLE pcs ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
+
+-- 2. Stored Procedure untuk Update PC
+DELIMITER $$
+CREATE PROCEDURE sp_update_pc (
+    IN p_pc_id INT,
+    IN p_pc_code VARCHAR(20),
+    IN p_lab_id INT,
+    IN p_processor VARCHAR(100),
+    IN p_ram VARCHAR(50),
+    IN p_storage VARCHAR(100),
+    IN p_gpu VARCHAR(100),
+    IN p_status VARCHAR(20)
+)
+BEGIN
+    UPDATE pcs
+    SET pc_code = p_pc_code,
+        lab_id = p_lab_id,
+        processor = p_processor,
+        ram = p_ram,
+        STORAGE = p_storage,
+        gpu = p_gpu,
+        STATUS = p_status,
+        updated_at = NOW()
+    WHERE pc_id = p_pc_id;
+END $$
+DELIMITER ;
+
+-- 3. Stored Procedure untuk Soft Delete PC
+DELIMITER $$
+CREATE PROCEDURE sp_soft_delete_pc (
+    IN p_pc_id INT
+)
+BEGIN
+    UPDATE pcs 
+    SET is_deleted = TRUE, updated_at = NOW() 
+    WHERE pc_id = p_pc_id;
+END $$
+DELIMITER ;
+
