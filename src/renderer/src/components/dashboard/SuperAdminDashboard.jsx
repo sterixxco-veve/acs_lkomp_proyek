@@ -31,14 +31,14 @@ export const SuperAdminDashboard = ({ user, activeMenu }) => {
       {/* Jika value dari sidebar adalah 'Components' */}
       {activeMenu === 'Components' && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MasterComponents />
+          <MasterComponents user={user} />
         </div>
       )}
 
       {/* Jika value dari sidebar adalah 'Software' */}
       {activeMenu === 'Software' && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MasterSoftware />
+          <MasterSoftware user={user} />
         </div>
       )}
 

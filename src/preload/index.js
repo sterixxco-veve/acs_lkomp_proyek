@@ -6,6 +6,8 @@ const api = {
 
   login: (credentials) => ipcRenderer.invoke('db:login', credentials),
 
+  getLabs: () => ipcRenderer.invoke('db:getLabs'),
+
   getPCs: (labId) => ipcRenderer.invoke('db:getPCs', labId),
 
   addPC: (data) => ipcRenderer.invoke('db:addPC', data),
@@ -14,11 +16,25 @@ const api = {
 
   deletePC: (data) => ipcRenderer.invoke('db:deletePC', id),
 
+  getPcInstalledSoftware: (pcId) => ipcRenderer.invoke('db:getPcInstalledSoftware', pcId),
+
+  updatePcSoftware: (data) => ipcRenderer.invoke('db:updatePcSoftware', data),
+
   getComponents: () => ipcRenderer.invoke('db:getComponents'),
 
   addComponent: (data) => ipcRenderer.invoke('db:addComponent', data),
 
-  getSoftwares: () => ipcRenderer.invoke('db:getSoftwares'),
+  updateComponent: (data) => ipcRenderer.invoke('db:updateComponent', data),
+
+  deleteComponent: (id) => ipcRenderer.invoke('db:deleteComponent', id),
+
+  getSoftware: (labId) => ipcRenderer.invoke('db:getSoftware', labId),
+
+  addSoftware: (data) => ipcRenderer.invoke('db:addSoftware', data),
+
+  updateSoftware: (data) => ipcRenderer.invoke('db:updateSoftware', data),
+
+  deleteSoftware: (id) => ipcRenderer.invoke('db:deleteSoftware', id),
 
   createMaintenance: (data) => ipcRenderer.invoke('db:createMaintenance', data),
 

@@ -44,6 +44,10 @@ function registerIpcHandlers() {
     return await db.login(credentials)
   })
 
+  ipcMain.handle('db:getLabs', async () => {
+    return await db.getAllLabs()
+  })
+
   ipcMain.handle('db:getPCs', async (_, labId) => {
     return await db.getAllPCs(labId)
   })
@@ -60,6 +64,14 @@ function registerIpcHandlers() {
     return await db.deletePC(id)
   })
 
+  ipcMain.handle('db:getPcInstalledSoftware', async (_, pcId) => {
+    return await db.getPcInstalledSoftware(pcId)
+  })
+
+  ipcMain.handle('db:updatePcSoftware', async (_, data) => {
+    return await db.updatePcSoftware(data.pcId, data.softwareIds)
+  })
+
   ipcMain.handle('db:getComponents', async () => {
     return await db.getComponents()
   })
@@ -68,8 +80,28 @@ function registerIpcHandlers() {
     return await db.addComponent(data)
   })
 
-  ipcMain.handle('db:getSoftwares', async () => {
-    return await db.getSoftwares()
+  ipcMain.handle('db:updateComponent', async (_, data) => {
+    return await db.updateComponent(data)
+  })
+
+  ipcMain.handle('db:deleteComponent', async (_, id) => {
+    return await db.deleteComponent(id)
+  })
+
+  ipcMain.handle('db:getSoftware', async (_, labId) => {
+    return await db.getSoftware(labId)
+  })
+
+  ipcMain.handle('db:addSoftware', async (_, data) => {
+    return await db.addSoftware(data)
+  })
+
+  ipcMain.handle('db:updateSoftware', async (_, data) => {
+    return await db.updateSoftware(data)
+  })
+
+  ipcMain.handle('db:deleteSoftware', async (_, id) => {
+    return await db.deleteSoftware(id)
   })
 
   ipcMain.handle('db:createMaintenance', async (_, data) => {
