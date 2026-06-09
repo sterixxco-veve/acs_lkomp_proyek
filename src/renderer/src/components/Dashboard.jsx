@@ -7,6 +7,8 @@ import { LabAdminDashboard } from '../components/dashboard/LabAdminDashboard'
 import { SekretarisDashboard } from '../components/dashboard/SekretarisDashboard'
 import MasterPeminjam from '../components/MasterPeminjam'
 import PengembalianDashboard from '../components/PengembalianDashboard'
+import { MaintenanceTransaction } from '../components/MaintenanceTransaction'
+import { Reports } from '../components/Reports'
 
 export function Dashboard({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Surat Peminjaman')
@@ -28,7 +30,7 @@ export function Dashboard({ user, onLogout }) {
 
       <div className="flex-1 overflow-y-auto">
         {/* SUPER ADMIN */}
-        {isSuperAdmin && (
+        {isSuperAdmin && activeMenu === 'Dashboard' && (
           <SuperAdminDashboard
             user={user}
             activeMenu={activeMenu}
@@ -36,11 +38,19 @@ export function Dashboard({ user, onLogout }) {
         )}
 
         {/* ADMIN LAB */}
-        {isAdminLab && (
+        {isAdminLab && activeMenu === 'Dashboard' && (
           <LabAdminDashboard
             user={user}
             activeMenu={activeMenu}
           />
+        )}
+
+        {(isSuperAdmin || isAdminLab) && activeMenu === 'Maintenance' && (
+          <MaintenanceTransaction user={user} />
+        )}
+        
+        {(isSuperAdmin || isAdminLab) && activeMenu === 'Reports' && (
+          <Reports user={user} />
         )}
 
         {/* SEKRETARIS */}

@@ -4,3 +4,6 @@ out
 .DS_Store
 .eslintcache
 *.log*
+ACS_PROJECT.pdf
+package-lock.json
+package.json

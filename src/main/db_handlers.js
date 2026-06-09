@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 // ========================================
 // MYSQL CONNECTION
@@ -381,6 +381,24 @@ export async function getMaintenanceTrend() {
   }
 }
 
+export async function getMostReplacedComponents() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+          c.component_name, 
+          SUM(md.quantity) as total_replaced
+      FROM maintenance_details md
+      JOIN components c ON md.component_id = c.component_id
+      GROUP BY c.component_name
+      ORDER BY total_replaced DESC
+      LIMIT 5
+    `)
+    return rows
+  } catch (err) {
+    return []
+  }
+}
+
 // ========================================
 // TV DASHBOARD
 // ========================================
@@ -526,6 +544,7 @@ export default {
   getHealthStatus,
   getLowStock,
   getMaintenanceTrend,
+  getMostReplacedComponents,
 
   getDashboardSummary,
   getLiveActivity

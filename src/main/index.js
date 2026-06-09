@@ -88,6 +88,10 @@ function registerIpcHandlers() {
     return await db.getMaintenanceTrend()
   })
 
+  ipcMain.handle('db:getMostReplacedComponents', async () => {
+    return await db.getMostReplacedComponents()
+  })
+
   ipcMain.handle('db:getDashboardSummary', async () => {
     return await db.getDashboardSummary()
   })

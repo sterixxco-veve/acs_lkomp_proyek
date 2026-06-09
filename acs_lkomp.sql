@@ -653,11 +653,22 @@ CREATE PROCEDURE sp_finish_maintenance (
     IN p_maintenance_id INT
 )
 BEGIN
+    -- Menangkap error SQL dan otomatis melakukan ROLLBACK
+    DECLARE exit handler for sqlexception
+    BEGIN
+        ROLLBACK;
+        RESIGNAL; -- Melemparkan kembali error agar aplikasi tahu ada yang gagal
+    END;
+
+    START TRANSACTION;
+
+    -- 1. Mengubah status perbaikan menjadi Selesai
     UPDATE maintenance
     SET maintenance_status = 'Completed',
         completed_date = NOW()
     WHERE maintenance_id = p_maintenance_id;
 
+    -- 2. Mengubah status PC menjadi Usable kembali
     UPDATE pcs
     SET STATUS = 'Usable',
         last_maintenance = CURDATE()
@@ -666,20 +677,18 @@ BEGIN
         FROM maintenance
         WHERE maintenance_id = p_maintenance_id
     );
+
+    -- 3. Mengurangi stok barang berdasarkan komponen yang dipakai
+    -- (Menggantikan fungsi trigger yang sebelumnya di luar transaksi)
+    UPDATE components c
+    INNER JOIN maintenance_details md ON c.component_id = md.component_id
+    SET c.stock = c.stock - md.quantity
+    WHERE md.maintenance_id = p_maintenance_id;
+
+    COMMIT;
 END $$
 
 DELIMITER ;
-
-DELIMITER $$
-
-CREATE TRIGGER trg_reduce_stock
-AFTER INSERT ON maintenance_details
-FOR EACH ROW
-BEGIN
-    UPDATE components
-    SET stock = stock - NEW.quantity
-    WHERE component_id = NEW.component_id;
-END $$
 
 DELIMITER ;
 

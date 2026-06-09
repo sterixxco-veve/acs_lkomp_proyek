@@ -28,6 +28,8 @@ const api = {
 
   getMaintenanceTrend: () => ipcRenderer.invoke('db:getMaintenanceTrend'),
 
+  getMostReplacedComponents: () => ipcRenderer.invoke('db:getMostReplacedComponents'),
+
   getDashboardSummary: () => ipcRenderer.invoke('db:getDashboardSummary'),
 
   getLiveActivity: () => ipcRenderer.invoke('db:getLiveActivity'),
