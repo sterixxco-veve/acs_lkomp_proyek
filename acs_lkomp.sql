@@ -858,3 +858,77 @@ BEGIN
 END $$
 DELIMITER ;
 
+-- components
+ALTER TABLE components 
+ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
+
+-- Stored Procedure: Add Komponen
+DELIMITER $$
+CREATE PROCEDURE sp_add_component (
+	IN p_name VARCHAR(100),
+    IN p_brand VARCHAR(50),
+    IN p_type VARCHAR(50),
+    IN p_stock INT,
+    IN p_min_stock INT,
+    IN p_condition VARCHAR(20)
+)
+
+BEGIN
+    INSERT INTO components (component_name, brand, type, stock, min_stock, condition_status)
+    VALUES (p_name, p_brand, p_type, p_stock, p_min_stock, p_condition);
+END $$
+DELIMITER ;
+
+-- Stored Procedure: Update Komponen
+DELIMITER $$
+CREATE PROCEDURE sp_update_component (
+    IN p_id INT,
+    IN p_name VARCHAR(100),
+    IN p_brand VARCHAR(50),
+    IN p_type VARCHAR(50),
+    IN p_stock INT,
+    IN p_min_stock INT,
+    IN p_condition VARCHAR(20)
+)
+BEGIN
+    UPDATE components 
+    SET component_name = p_name, 
+        brand = p_brand, 
+        type = p_type, 
+        stock = p_stock, 
+        min_stock = p_min_stock, 
+        condition_status = p_condition, 
+        updated_at = NOW()
+    WHERE component_id = p_id;
+END $$
+DELIMITER ;
+
+-- Stored Procedure: Soft Delete Komponen
+DELIMITER $$
+CREATE PROCEDURE sp_soft_delete_component (
+    IN p_id INT
+)
+BEGIN
+    UPDATE components 
+    SET is_deleted = TRUE, updated_at = NOW() 
+    WHERE component_id = p_id;
+END $$
+DELIMITER ;
+
+
+
+INSERT INTO pcs
+(pc_code, lab_id, processor, ram, STORAGE, gpu, STATUS)
+VALUES
+('PC-L4-001', 1, 'Intel i5', '8GB', '256 SSD', 'Intel UHD', 'Usable');
+
+
+INSERT INTO components
+(component_name, brand, TYPE, stock, min_stock, condition_status)
+VALUES
+('RAM DDR4 8GB', 'Kingston', 'RAM', 20, 5, 'New');
+
+(software_name, VERSION, mata_kuliah, license_type)
+VALUES
+('Visual Studio Code','1.100','Pemrograman','Free');
+

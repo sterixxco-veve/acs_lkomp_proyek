@@ -12,9 +12,7 @@ import { TvDashboard } from '../components/TvDashboard'
 export function Dashboard({ user, onLogout }) {
   const isSuperAdmin = user.role_name === 'SuperAdmin'
   const isSekretaris = user.role_name === 'Sekretaris'
-  const isAdminLab =
-    user.role_name.includes('Admin') &&
-    user.role_name !== 'SuperAdmin'
+  const isAdminLab = user.role_name.includes('Admin') && user.role_name !== 'SuperAdmin'
 
   const [activeMenu, setActiveMenu] = useState(
     isSekretaris ? 'Surat Peminjaman' : 'Dashboard'
@@ -41,37 +39,20 @@ export function Dashboard({ user, onLogout }) {
 
       <div className="flex-1 overflow-y-auto">
         {/* SUPER ADMIN */}
-        {isSuperAdmin && (
-          <SuperAdminDashboard
-            user={user}
-            activeMenu={activeMenu}
-          />
-        )}
+        {isSuperAdmin && <SuperAdminDashboard user={user} activeMenu={activeMenu} />}
 
         {/* ADMIN LAB */}
-        {isAdminLab && (
-          <LabAdminDashboard
-            user={user}
-            activeMenu={activeMenu}
-          />
-        )}
+        {isAdminLab && <LabAdminDashboard user={user} activeMenu={activeMenu} />}
 
         {/* SEKRETARIS */}
         {isSekretaris && (
           <>
             {activeMenu === 'Surat Peminjaman' && (
-              <SekretarisDashboard
-                user={user}
-                activeMenu={activeMenu}
-              />
+              <SekretarisDashboard user={user} activeMenu={activeMenu} />
             )}
 
-            {activeMenu === 'Master Peminjam' && (
-              <MasterPeminjam />
-            )}
-            {activeMenu === 'Laporan Peminjaman' && (
-              <PengembalianDashboard />
-            )}
+            {activeMenu === 'Master Peminjam' && <MasterPeminjam />}
+            {activeMenu === 'Laporan Peminjaman' && <PengembalianDashboard />}
           </>
         )}
       </div>

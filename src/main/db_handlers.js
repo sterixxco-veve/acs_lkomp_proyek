@@ -115,6 +115,15 @@ export async function login({ username, password }) {
 // MASTER PC
 // ========================================
 
+export async function getAllLabs() {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM labs ORDER BY lab_id ASC')
+    return rows
+  } catch (err) {
+    return []
+  }
+}
+
 export async function getAllPCs(labId = null) {
   try {
     let query = `
@@ -129,7 +138,7 @@ export async function getAllPCs(labId = null) {
     let params = []
 
     if (labId) {
-      query += ' WHERE p.lab_id = ?'
+      query += ' AND p.lab_id = ?'
       params.push(labId)
     }
 
@@ -222,57 +231,118 @@ export async function deletePC(pcId) {
   }
 }
 
+// ==========================================
+//        PC SOFTWARE (INSTALASI) HANDLERS
+// ==========================================
+
+export async function getPcInstalledSoftware(pcId) {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT software_id FROM pc_softwares WHERE pc_id = ? AND STATUS = 'Installed'`,
+      [pcId]
+    )
+    return rows.map((r) => r.software_id)
+  } catch (err) {
+    console.error('Error getPcInstalledSoftware:', err)
+    return []
+  }
+}
+
+export async function updatePcSoftware(pcId, softwareIds) {
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+
+    await connection.execute(`UPDATE pc_softwares SET STATUS = 'Uninstalled' WHERE pc_id = ?`, [
+      pcId
+    ])
+
+    if (softwareIds && softwareIds.length > 0) {
+      for (const sId of softwareIds) {
+        const [existing] = await connection.execute(
+          `SELECT pc_software_id FROM pc_softwares WHERE pc_id = ? AND software_id = ?`,
+          [pcId, sId]
+        )
+
+        if (existing.length > 0) {
+          await connection.execute(
+            `UPDATE pc_softwares SET STATUS = 'Installed', installed_date = CURDATE() WHERE pc_id = ? AND software_id = ?`,
+            [pcId, sId]
+          )
+        } else {
+          await connection.execute(
+            `INSERT INTO pc_softwares (pc_id, software_id, installed_date, STATUS) VALUES (?, ?, CURDATE(), 'Installed')`,
+            [pcId, sId]
+          )
+        }
+      }
+    }
+
+    await connection.commit()
+    return { success: true }
+  } catch (err) {
+    await connection.rollback()
+    return { success: false, message: err.message }
+  } finally {
+    connection.release()
+  }
+}
+
 // ========================================
 // COMPONENTS
 // ========================================
 
 export async function getComponents() {
   try {
-    const [rows] = await pool.query(`
-      SELECT *
-      FROM components
-      ORDER BY component_name ASC
-    `)
-
+    const [rows] = await pool.execute(
+      `SELECT * FROM components WHERE is_deleted = FALSE ORDER BY component_name ASC`
+    )
     return rows
   } catch (err) {
+    console.error(err)
     return []
   }
 }
 
 export async function addComponent(data) {
   try {
-    await pool.execute(
-      `
-      INSERT INTO components
-      (
-        component_name,
-        brand,
-        type,
-        stock,
-        min_stock,
-        condition_status
-      )
-      VALUES (?, ?, ?, ?, ?, ?)
-      `,
-      [
-        data.component_name,
-        data.brand,
-        data.type,
-        data.stock,
-        data.min_stock,
-        data.condition_status
-      ]
-    )
-
-    return {
-      success: true
-    }
+    await pool.query('CALL sp_add_component(?, ?, ?, ?, ?, ?)', [
+      data.component_name,
+      data.brand,
+      data.type,
+      data.stock,
+      data.min_stock,
+      data.condition_status
+    ])
+    return { success: true }
   } catch (err) {
-    return {
-      success: false,
-      message: err.message
-    }
+    return { success: false, message: err.message }
+  }
+}
+
+export async function updateComponent(data) {
+  try {
+    await pool.query('CALL sp_update_component(?, ?, ?, ?, ?, ?, ?)', [
+      data.component_id,
+      data.component_name,
+      data.brand,
+      data.type,
+      data.stock,
+      data.min_stock,
+      data.condition_status
+    ])
+    return { success: true }
+  } catch (err) {
+    return { success: false, message: err.message }
+  }
+}
+
+export async function deleteComponent(id) {
+  try {
+    await pool.query('CALL sp_soft_delete_component(?)', [id])
+    return { success: true }
+  } catch (err) {
+    return { success: false, message: err.message }
   }
 }
 
@@ -280,17 +350,134 @@ export async function addComponent(data) {
 // SOFTWARE
 // ========================================
 
-export async function getSoftwares() {
+export async function getSoftware(labId = null) {
   try {
-    const [rows] = await pool.query(`
-      SELECT *
-      FROM softwares
-      ORDER BY software_name ASC
-    `)
+    let query = `
+      SELECT 
+        s.software_id, 
+        s.software_name, 
+        s.VERSION as version, 
+        s.mata_kuliah, 
+        s.license_type, 
+        s.license_expiry,
+        COALESCE(GROUP_CONCAT(DISTINCT l.lab_id), '') as lab_ids,
+        COALESCE(GROUP_CONCAT(DISTINCT l.lab_name SEPARATOR ', '), '') as lab_names,
+        (SELECT COUNT(ps.pc_id) FROM pc_softwares ps WHERE ps.software_id = s.software_id AND ps.STATUS = 'Installed') as installed_count
+      FROM softwares s
+      LEFT JOIN software_lab_access sla ON s.software_id = sla.software_id
+      LEFT JOIN labs l ON sla.lab_id = l.lab_id
+    `
+    let params = []
 
+    // Filter khusus Admin Lab
+    if (labId) {
+      query += ` WHERE s.software_id IN (SELECT software_id FROM software_lab_access WHERE lab_id = ?)`
+      params.push(labId)
+    }
+
+    query += ` GROUP BY s.software_id ORDER BY s.software_name ASC`
+
+    const [rows] = await pool.execute(query, params)
     return rows
   } catch (err) {
+    console.error('Error getSoftware:', err)
     return []
+  }
+}
+
+export async function addSoftware(data) {
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+
+    // 1. Insert ke tabel softwares
+    const [result] = await connection.execute(
+      'INSERT INTO softwares (software_name, VERSION, mata_kuliah, license_type, license_expiry) VALUES (?, ?, ?, ?, ?)',
+      [data.software_name, data.version, data.mata_kuliah, data.license_type, data.license_expiry]
+    )
+    const newSoftwareId = result.insertId
+
+    // 2. Insert ke tabel software_lab_access
+    if (data.lab_ids && data.lab_ids.length > 0) {
+      for (const labId of data.lab_ids) {
+        await connection.execute(
+          'INSERT INTO software_lab_access (software_id, lab_id) VALUES (?, ?)',
+          [newSoftwareId, labId]
+        )
+      }
+    }
+
+    await connection.commit()
+    return { success: true }
+  } catch (err) {
+    await connection.rollback()
+    return { success: false, message: err.message }
+  } finally {
+    connection.release()
+  }
+}
+
+export async function updateSoftware(data) {
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+
+    // 1. Update tabel softwares
+    await connection.execute(
+      'UPDATE softwares SET software_name = ?, VERSION = ?, mata_kuliah = ?, license_type = ?, license_expiry = ? WHERE software_id = ?',
+      [
+        data.software_name,
+        data.version,
+        data.mata_kuliah,
+        data.license_type,
+        data.license_expiry,
+        data.software_id
+      ]
+    )
+
+    // 2. Reset akses lab
+    await connection.execute('DELETE FROM software_lab_access WHERE software_id = ?', [
+      data.software_id
+    ])
+
+    // 3. Insert ulang akses lab
+    if (data.lab_ids && data.lab_ids.length > 0) {
+      for (const labId of data.lab_ids) {
+        await connection.execute(
+          'INSERT INTO software_lab_access (software_id, lab_id) VALUES (?, ?)',
+          [data.software_id, labId]
+        )
+      }
+    }
+
+    await connection.commit()
+    return { success: true }
+  } catch (err) {
+    await connection.rollback()
+    return { success: false, message: err.message }
+  } finally {
+    connection.release()
+  }
+}
+
+export async function deleteSoftware(id) {
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+    // Hapus relasi lab dulu (child), baru hapus software (parent)
+    await connection.execute('DELETE FROM software_lab_access WHERE software_id = ?', [id])
+    await connection.execute('DELETE FROM softwares WHERE software_id = ?', [id])
+
+    await connection.commit()
+    return { success: true }
+  } catch (err) {
+    await connection.rollback()
+    return {
+      success: false,
+      message: 'Gagal menghapus! Software ini mungkin masih terinstal di beberapa PC.'
+    }
+  } finally {
+    connection.release()
   }
 }
 
@@ -549,10 +736,13 @@ export default {
   register,
   login,
 
+  getAllLabs,
+
   getAllPCs,
   addPC,
   updatePC,
   deletePC,
+  getPcInstalledSoftware,
 
   getPeminjam,
   addPeminjam,
@@ -565,8 +755,13 @@ export default {
 
   getComponents,
   addComponent,
+  updateComponent,
+  deleteComponent,
 
-  getSoftwares,
+  getSoftware,
+  addSoftware,
+  updateSoftware,
+  deleteSoftware,
 
   createMaintenance,
   addMaintenanceDetail,
