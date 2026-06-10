@@ -62,7 +62,7 @@ export async function register({ username, password, fullName = null, roleId = 2
 export async function login({ username, password }) {
   try {
     const [rows] = await pool.execute(
-      ` SELECT u.user_id, u.username, u.PASSWORD AS password, u.full_name, u.role_id, r.role_name, u.lab_id, u.STATUS AS status FROM users u JOIN roles r ON u.role_id = r.role_id WHERE u.username = ? AND u.STATUS = 'Active' `,
+      ` SELECT u.user_id, u.username, u.PASSWORD AS password, u.full_name, u.role_id, r.role_name, u.lab_id, l.lab_code, u.STATUS AS status FROM users u JOIN roles r ON u.role_id = r.role_id JOIN labs l ON u.lab_id = l.lab_id WHERE u.username = ? AND u.STATUS = 'Active' `,
       [username]
     )
 

@@ -42,7 +42,7 @@ export const LabAdminDashboard = ({ user, activeMenu }) => {
         <div className="animate-in fade-in duration-300">
 
           <h2 className="text-4xl font-bold text-[#1E293B] mb-2">
-            Dashboard Lab {user?.lab_name || user?.lab_id}
+            Dashboard Lab {user?.lab_code}
           </h2>
 
           <p className="text-[#64748B] mb-8">
