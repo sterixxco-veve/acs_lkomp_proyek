@@ -66,7 +66,7 @@ export async function login({ username, password }) {
       [username]
     )
 
-      if (rows.length === 0) {
+    if (rows.length === 0) {
       return {
         success: false,
         message: 'Username tidak ditemukan'
@@ -186,6 +186,7 @@ export async function addPC(data) {
       data.storage,
       data.motherboard,
       data.cooling,
+      data.psu,
       data.gpu
     ])
     return { success: true }
@@ -205,6 +206,7 @@ export async function updatePC(data) {
       data.storage,
       data.motherboard,
       data.cooling,
+      data.psu,
       data.gpu,
       data.status
     ])
@@ -622,7 +624,6 @@ export async function getMostReplacedComponents() {
 
 export async function getDashboardSummary(labId = null) {
   try {
-
     if (!labId) {
       const [rows] = await pool.query(`
         SELECT *
@@ -632,7 +633,8 @@ export async function getDashboardSummary(labId = null) {
       return rows[0]
     }
 
-    const [rows] = await pool.query(`
+    const [rows] = await pool.query(
+      `
       SELECT
         COUNT(*) AS total_pc,
 
@@ -662,10 +664,11 @@ export async function getDashboardSummary(labId = null) {
 
       FROM pcs
       WHERE lab_id = ?
-    `, [labId])
+    `,
+      [labId]
+    )
 
     return rows[0]
-
   } catch (err) {
     console.error(err)
     return null

@@ -937,17 +937,20 @@ ALTER TABLE pcs
 ADD COLUMN motherboard VARCHAR(100) NOT NULL AFTER storage,
 ADD COLUMN cooling VARCHAR(100) NOT NULL AFTER motherboard;
 
+ALTER TABLE pcs
+ADD COLUMN psu VARCHAR(100) NULL AFTER cooling;
+
 -- 1. Revisi SP Tambah PC
 DROP PROCEDURE IF EXISTS sp_add_pc;
 DELIMITER $$
 CREATE PROCEDURE sp_add_pc (
     IN p_code VARCHAR(20), IN p_lab INT, IN p_proc VARCHAR(100), 
     IN p_ram VARCHAR(50), IN p_storage VARCHAR(100), 
-    IN p_mobo VARCHAR(100), IN p_cooling VARCHAR(100), IN p_gpu VARCHAR(100)
+    IN p_mobo VARCHAR(100), IN p_cooling VARCHAR(100), IN p_psu VARCHAR(100), IN p_gpu VARCHAR(100)
 )
 BEGIN
     INSERT INTO pcs (pc_code, lab_id, processor, ram, STORAGE, motherboard, cooling, gpu, STATUS)
-    VALUES (p_code, p_lab, p_proc, p_ram, p_storage, p_mobo, p_cooling, p_gpu, 'Usable');
+    VALUES (p_code, p_lab, p_proc, p_ram, p_storage, p_mobo, p_cooling, p_psu, p_gpu, 'Usable');
 END $$
 DELIMITER ;
 
@@ -957,12 +960,25 @@ DELIMITER $$
 CREATE PROCEDURE sp_update_pc (
     IN p_id INT, IN p_code VARCHAR(20), IN p_lab INT, IN p_proc VARCHAR(100), 
     IN p_ram VARCHAR(50), IN p_storage VARCHAR(100), 
-    IN p_mobo VARCHAR(100), IN p_cooling VARCHAR(100), IN p_gpu VARCHAR(100), IN p_status VARCHAR(20)
+    IN p_mobo VARCHAR(100), IN p_cooling VARCHAR(100), IN p_psu VARCHAR(100), IN p_gpu VARCHAR(100), IN p_status VARCHAR(20)
 )
 BEGIN
     UPDATE pcs 
     SET pc_code = p_code, lab_id = p_lab, processor = p_proc, ram = p_ram, 
-        STORAGE = p_storage, motherboard = p_mobo, cooling = p_cooling, gpu = p_gpu, STATUS = p_status
+        STORAGE = p_storage, motherboard = p_mobo, cooling = p_cooling, psu = p_psu, gpu = p_gpu, STATUS = p_status
     WHERE pc_id = p_id;
 END $$
 DELIMITER ;
+
+ALTER TABLE components
+MODIFY TYPE ENUM(
+    'Processor',
+    'RAM',
+    'SSD',
+    'HDD',
+    'GPU',
+    'PSU',
+    'Motherboard',
+    'Cooling',
+    'Other'
+);
