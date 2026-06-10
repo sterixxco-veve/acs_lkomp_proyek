@@ -184,35 +184,33 @@ export async function addPeminjam(data) {
 
 export async function addPC(data) {
   try {
-    await pool.query('CALL sp_add_pc(?, ?, ?, ?, ?, ?)', [
+    await pool.query('CALL sp_add_pc(?, ?, ?, ?, ?, ?, ?, ?)', [
       data.pc_code,
       data.lab_id,
       data.processor,
       data.ram,
       data.storage,
+      data.motherboard,
+      data.cooling,
       data.gpu
     ])
-
-    return {
-      success: true
-    }
+    return { success: true }
   } catch (err) {
-    return {
-      success: false,
-      message: err.message
-    }
+    return { success: false, message: err.message }
   }
 }
 
 export async function updatePC(data) {
   try {
-    await pool.query('CALL sp_update_pc(?, ?, ?, ?, ?, ?, ?, ?)', [
+    await pool.query('CALL sp_update_pc(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
       data.pc_id,
       data.pc_code,
       data.lab_id,
       data.processor,
       data.ram,
       data.storage,
+      data.motherboard,
+      data.cooling,
       data.gpu,
       data.status
     ])
