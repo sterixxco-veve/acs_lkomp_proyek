@@ -60,6 +60,10 @@ function registerIpcHandlers() {
     return await db.updatePC(data)
   })
 
+  ipcMain.handle('db:updatePcStatusOnly', async (_, data) => {
+    return await db.updatePcStatusOnly(data.pcId, data.status)
+  })
+
   ipcMain.handle('db:deletePC', async (_, id) => {
     return await db.deletePC(id)
   })

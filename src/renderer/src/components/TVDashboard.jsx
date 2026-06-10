@@ -18,35 +18,58 @@ export function TvDashboard({ user, onBack, onLogout }) {
     return () => clearInterval(timer);
   }, []);
 
+  // NEW STATES
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedPc, setSelectedPc] = useState(null);
+  const [tempStatus, setTempStatus] = useState('');
+
+  const loadData = async () => {
+    try {
+      const pcs = await window.api.getPCs();
+      setPcData(pcs);
+      
+      const activities = pcs
+        .filter(p => (p.STATUS || p.status) !== 'Usable')
+        .slice(0, 5)
+        .map(p => ({
+          id: p.pc_id,
+          code: p.pc_code,
+          status: p.STATUS || p.status,
+          time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        }));
+      
+      setMaintenanceFeed(activities);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch Data
   useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        const pcs = await window.api.getPCs();
-        setPcData(pcs);
-        
-        const activities = pcs
-          .filter(p => (p.STATUS || p.status) !== 'Usable')
-          .slice(0, 5)
-          .map(p => ({
-            id: p.pc_id,
-            code: p.pc_code,
-            status: p.STATUS || p.status,
-            time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-          }));
-        
-        setMaintenanceFeed(activities);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-    const interval = setInterval(fetchAllData, 10000); // Polling every 10s
+    loadData();
+    const interval = setInterval(loadData, 10000); // Polling every 10s
     return () => clearInterval(interval);
   }, []);
+
+  const handleBoxClick = (pc) => {
+    if (!pc) return; // Only open modal if PC exists in DB
+    setSelectedPc(pc);
+    setTempStatus(pc.STATUS || pc.status);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleSaveStatus = async () => {
+    try {
+      await window.api.updatePcStatusOnly(selectedPc.pc_id, tempStatus);
+      setIsStatusModalOpen(false);
+      loadData(); // Refresh data immediately
+    } catch (err) {
+      console.error(err);
+      alert('Gagal mengubah status');
+    }
+  };
 
   // Static Lab Layout Definition
   const parsedLabs = (() => {
@@ -219,8 +242,9 @@ export function TvDashboard({ user, onBack, onLogout }) {
                     return (
                       <div 
                         key={code} 
+                        onClick={() => handleBoxClick(pc)}
                         title={`Code: ${code}\nStatus: ${status}\nDB Match: ${pc ? pc.pc_code : 'None'}`}
-                        className={`aspect-square rounded-xl flex items-center justify-center font-bold text-sm cursor-pointer transition-transform hover:-translate-y-1 ${colorClass}`}
+                        className={`aspect-square rounded-xl flex items-center justify-center font-bold text-sm transition-transform ${pc ? 'cursor-pointer hover:-translate-y-1 shadow-sm' : 'opacity-50 cursor-not-allowed'} ${colorClass}`}
                       >
                         {boxLabel}
                       </div>
@@ -263,6 +287,47 @@ export function TvDashboard({ user, onBack, onLogout }) {
         </div>
 
       </div>
+
+      {/* STATUS MODAL */}
+      {isStatusModalOpen && selectedPc && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-3xl p-8 w-[400px] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Update Status PC</h2>
+            <p className="text-slate-500 mb-6">
+              Ubah status untuk PC <span className="font-bold text-blue-600">{selectedPc.pc_code}</span> secara langsung.
+            </p>
+
+            <div className="space-y-4 mb-8">
+              <label className="block text-sm font-semibold text-slate-700">Pilih Status Baru</label>
+              <select
+                value={tempStatus}
+                onChange={(e) => setTempStatus(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-semibold appearance-none"
+              >
+                <option value="Usable">✅ Usable </option>
+                <option value="Broken">❌ Broken </option>
+                <option value="Maintenance">🔧 Maintenance </option>
+              </select>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsStatusModalOpen(false)}
+                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSaveStatus}
+                className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-200"
+              >
+                Simpan Status
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

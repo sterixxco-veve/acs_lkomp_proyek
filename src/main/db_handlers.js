@@ -220,6 +220,15 @@ export async function updatePC(data) {
   }
 }
 
+export async function updatePcStatusOnly(pcId, status) {
+  try {
+    await pool.query('UPDATE pcs SET STATUS = ? WHERE pc_id = ?', [status, pcId])
+    return { success: true }
+  } catch (err) {
+    return { success: false, message: err.message }
+  }
+}
+
 export async function deletePC(pcId) {
   try {
     await pool.query('CALL sp_soft_delete_pc(?)', [pcId])
@@ -739,6 +748,7 @@ export default {
   getAllPCs,
   addPC,
   updatePC,
+  updatePcStatusOnly,
   deletePC,
   getPcInstalledSoftware,
 

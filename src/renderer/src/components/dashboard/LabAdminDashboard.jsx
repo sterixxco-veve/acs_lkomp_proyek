@@ -144,7 +144,13 @@ export const LabAdminDashboard = ({ user, activeMenu }) => {
                     </div>
 
                     <div className="text-xs text-slate-400">
-                      {item.maintenance_date}
+                      {new Date(item.maintenance_date).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     </div>
                   </div>
                 ))}
