@@ -52,7 +52,7 @@ const api = {
 
   getMostReplacedComponents: () => ipcRenderer.invoke('db:getMostReplacedComponents'),
 
-  getDashboardSummary: () => ipcRenderer.invoke('db:getDashboardSummary'),
+  getDashboardSummary: (labId) => ipcRenderer.invoke('db:getDashboardSummary', labId),
 
   getLiveActivity: () => ipcRenderer.invoke('db:getLiveActivity'),
   getPeminjam: () => ipcRenderer.invoke('db:getPeminjam'),

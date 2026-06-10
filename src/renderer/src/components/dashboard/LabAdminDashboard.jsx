@@ -21,7 +21,7 @@ export const LabAdminDashboard = ({ user, activeMenu }) => {
 
   const loadDashboard = async () => {
     try {
-      const dashboardData = await window.api.getDashboardSummary()
+      const dashboardData = await window.api.getDashboardSummary(user.lab_id)
       const activityData = await window.api.getLiveActivity()
 
       if (dashboardData) {

@@ -1,5 +1,5 @@
 import React from 'react'
-
+import { Settings } from '../Settings'
 import { MasterPC } from '../MasterPC'
 import { MasterComponents } from '../MasterComponents'
 import { MasterSoftware } from '../MasterSoftware'
@@ -125,6 +125,12 @@ export const SuperAdminDashboard = ({ user, activeMenu }) => {
       {activeMenu === 'Reports' && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Reports user={user} />
+        </div>
+      )}
+
+      {activeMenu === 'Settings' && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Settings user={user} />
         </div>
       )}
     </div>

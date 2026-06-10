@@ -62,20 +62,14 @@ export async function register({ username, password, fullName = null, roleId = 2
 export async function login({ username, password }) {
   try {
     const [rows] = await pool.execute(
-      ` SELECT u.user_id, u.username, u.PASSWORD AS password, u.full_name, u.role_id, r.role_name, u.lab_id, l.lab_code, u.STATUS AS status FROM users u JOIN roles r ON u.role_id = r.role_id JOIN labs l ON u.lab_id = l.lab_id WHERE u.username = ? AND u.STATUS = 'Active' `,
+      ` SELECT u.user_id, u.username, u.PASSWORD AS password, u.full_name, u.role_id, r.role_name, u.lab_id, l.lab_code, u.STATUS AS status FROM users u JOIN roles r ON u.role_id = r.role_id LEFT JOIN labs l ON u.lab_id = l.lab_id WHERE u.username = ? AND u.STATUS = 'Active' `,
       [username]
     )
 
-    if (rows.length === 0) {
+      if (rows.length === 0) {
       return {
-        // success: false,
-        success: true,
-        user: {
-          user_id: 1,
-          username: 'admin_l4',
-          role_name: 'Admin L4',
-          lab_id: 1
-        }
+        success: false,
+        message: 'Username tidak ditemukan'
       }
     }
 
@@ -626,15 +620,54 @@ export async function getMostReplacedComponents() {
 // TV DASHBOARD
 // ========================================
 
-export async function getDashboardSummary() {
+export async function getDashboardSummary(labId = null) {
   try {
+
+    if (!labId) {
+      const [rows] = await pool.query(`
+        SELECT *
+        FROM vw_dashboard_summary
+      `)
+
+      return rows[0]
+    }
+
     const [rows] = await pool.query(`
-      SELECT *
-      FROM vw_dashboard_summary
-    `)
+      SELECT
+        COUNT(*) AS total_pc,
+
+        SUM(
+          CASE
+            WHEN pc_status = 'ACTIVE'
+            THEN 1
+            ELSE 0
+          END
+        ) AS active_pc,
+
+        SUM(
+          CASE
+            WHEN pc_status = 'BROKEN'
+            THEN 1
+            ELSE 0
+          END
+        ) AS broken_pc,
+
+        SUM(
+          CASE
+            WHEN pc_status = 'MAINTENANCE'
+            THEN 1
+            ELSE 0
+          END
+        ) AS maintenance_pc
+
+      FROM pcs
+      WHERE lab_id = ?
+    `, [labId])
 
     return rows[0]
+
   } catch (err) {
+    console.error(err)
     return null
   }
 }

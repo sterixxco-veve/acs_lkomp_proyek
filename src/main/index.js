@@ -136,9 +136,9 @@ function registerIpcHandlers() {
     return await db.getMostReplacedComponents()
   })
 
-  ipcMain.handle('db:getDashboardSummary', async () => {
-    return await db.getDashboardSummary()
-  })
+ipcMain.handle('db:getDashboardSummary', async (_, labId) => {
+  return await db.getDashboardSummary(labId)
+})
 
   ipcMain.handle('db:getLiveActivity', async () => {
     return await db.getLiveActivity()

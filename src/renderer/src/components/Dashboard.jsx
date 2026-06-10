@@ -10,6 +10,9 @@ import PengembalianDashboard from '../components/PengembalianDashboard'
 import { TvDashboard } from '../components/TvDashboard'
 
 export function Dashboard({ user, onLogout }) {
+
+  console.log('LOGIN USER:', user)
+  
   const isSuperAdmin = user.role_name === 'SuperAdmin'
   const isSekretaris = user.role_name === 'Sekretaris'
   const isAdminLab = user.role_name.includes('Admin') && user.role_name !== 'SuperAdmin'
