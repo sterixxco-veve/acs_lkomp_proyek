@@ -153,12 +153,12 @@ export function MaintenanceTransaction({ user }) {
                         <select 
                             value={selectedPC} 
                             onChange={(e) => setSelectedPC(e.target.value)}
-                            className="w-full flex h-10 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#5D7CEB] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full flex h-10 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#5D7CEB] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            <option value="" disabled>Pilih PC yang rusak</option>
-                            {brokenPCs.length === 0 && <option value="none" disabled>Tidak ada PC rusak</option>}
+                            <option value="" disabled className="text-slate-500">Pilih PC yang rusak</option>
+                            {brokenPCs.length === 0 && <option value="none" disabled className="text-slate-500">Tidak ada PC rusak</option>}
                             {brokenPCs.map((pc) => (
-                                <option key={pc.pc_code} value={pc.pc_code}>
+                                <option key={pc.pc_code} value={pc.pc_code} className="text-slate-900">
                                     {pc.pc_code} - {pc.lab_name || 'Unknown Lab'}
                                 </option>
                             ))}
