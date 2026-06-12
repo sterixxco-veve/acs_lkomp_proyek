@@ -917,17 +917,106 @@ DELIMITER ;
 
 
 
-INSERT INTO pcs
-(pc_code, lab_id, processor, ram, STORAGE, gpu, STATUS)
+INSERT INTO pcs (pc_code, lab_id, processor, ram, STORAGE, motherboard, cooling, psu, gpu, STATUS)
 VALUES
-('PC-L4-001', 1, 'Intel i5', '8GB', '256 SSD', 'Intel UHD', 'Usable');
+-- 5 PC untuk Lab E4 (lab_id = 4)
+('E4-PC-A501', 4, 'Intel Core i5-12400F', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('E4-PC-A502', 4, 'Intel Core i5-12400F', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('E4-PC-A503', 4, 'Intel Core i5-12400F', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('E4-PC-A504', 4, 'Intel Core i5-12400F', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Maintenance'),
+('E4-PC-A505', 4, 'Intel Core i5-12400F', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+
+-- 5 PC untuk Lab L2 (lab_id = 3)
+('L2-PC-A201', 3, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('L2-PC-A202', 3, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('L2-PC-A203', 3, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('L2-PC-A204', 3, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Broken'),
+('L2-PC-A205', 3, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+
+-- 5 PC untuk Lab L3 (lab_id = 2)
+('L3-PC-A301', 2, 'Intel Core i5-12400F', 'RAM DDR4 8GB', 'HDD 1TB SATA', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'Intel UHD', 'Usable'),
+('L3-PC-A302', 2, 'Intel Core i5-12400F', 'RAM DDR4 8GB', 'HDD 1TB SATA', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'Intel UHD', 'Usable'),
+('L3-PC-A303', 2, 'Intel Core i5-12400F', 'RAM DDR4 8GB', 'HDD 1TB SATA', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'Intel UHD', 'Maintenance'),
+('L3-PC-A304', 2, 'Intel Core i5-12400F', 'RAM DDR4 8GB', 'HDD 1TB SATA', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'Intel UHD', 'Usable'),
+('L3-PC-A305', 2, 'Intel Core i5-12400F', 'RAM DDR4 8GB', 'HDD 1TB SATA', 'MSI B550-A PRO', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'Intel UHD', 'Usable'),
+
+-- 5 PC untuk Lab L4 (lab_id = 1)
+('L4-PC-A401', 1, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('L4-PC-A402', 1, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('L4-PC-A403', 1, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('L4-PC-A404', 1, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Usable'),
+('L4-PC-A405', 1, 'AMD Ryzen 5 5600X', 'RAM DDR4 16GB', 'SSD 512GB NVMe', 'ASUS Prime H610M', 'Cooler Master Hyper 212', 'Corsair CV650 650W', 'RTX 3060 12GB', 'Broken');
 
 
 INSERT INTO components
 (component_name, brand, TYPE, stock, min_stock, condition_status)
 VALUES
-('RAM DDR4 8GB', 'Kingston', 'RAM', 20, 5, 'New');
+('Corsair CV550 550W', 'Corsair', 'PSU', 10, 3, 'New'),
+('Corsair CX650 650W', 'Corsair', 'PSU', 12, 3, 'New'),
+('Cooler Master MWE 550 Bronze V2', 'Cooler Master', 'PSU', 15, 4, 'New'),
+('Cooler Master MWE 650 Bronze V2', 'Cooler Master', 'PSU', 8, 2, 'New'),
+('FSP HV PRO 550W', 'FSP', 'PSU', 20, 5, 'New'),
+('FSP HV PRO 650W', 'FSP', 'PSU', 14, 3, 'New'),
+('MSI MAG A550BN 550W', 'MSI', 'PSU', 18, 4, 'New'),
+('MSI MAG A650BN 650W', 'MSI', 'PSU', 11, 3, 'New'),
+('Seasonic B12 BC-550 550W', 'Seasonic', 'PSU', 7, 2, 'New'),
+('Seasonic B12 BC-650 650W', 'Seasonic', 'PSU', 9, 2, 'New'),
+('Deepcool PK550D 550W', 'Deepcool', 'PSU', 15, 3, 'New'),
+('Deepcool PK650D 650W', 'Deepcool', 'PSU', 13, 3, 'New'),
+('Adata XPG Pylon 550W', 'Adata XPG', 'PSU', 10, 2, 'New'),
+('Adata XPG Pylon 650W', 'Adata XPG', 'PSU', 12, 3, 'New');
 
+INSERT INTO components
+(component_name, brand, TYPE, stock, min_stock, condition_status)
+VALUES
+('Cooler Master Hyper 212 Halo Black', 'Cooler Master', 'Cooling', 15, 3, 'New'),
+('Deepcool AK400 Digital', 'Deepcool', 'Cooling', 12, 3, 'New'),
+('Deepcool AK620 Digital White', 'Deepcool', 'Cooling', 8, 2, 'New'),
+('Thermalright Peerless Assassin 120 SE', 'Thermalright', 'Cooling', 14, 4, 'New'),
+('ID-COOLING SE-224-XTS ARGB', 'ID-COOLING', 'Cooling', 20, 5, 'New'),
+('Noctua NH-D15 chromax.black', 'Noctua', 'Cooling', 5, 1, 'New'),
+('Corsair iCUE H100i Elite Capellix XT 240mm', 'Corsair', 'Cooling', 6, 2, 'New'),
+('Deepcool LE520 240mm AIO', 'Deepcool', 'Cooling', 10, 2, 'New'),
+('Cooler Master MasterLiquid 360L Core', 'Cooler Master', 'Cooling', 7, 2, 'New'),
+('NZXT Kraken Elite 360 RGB Black', 'NZXT', 'Cooling', 4, 1, 'New');
+
+INSERT INTO components
+(component_name, brand, TYPE, stock, min_stock, condition_status)
+VALUES
+-- ==================== TYPE: RAM ====================
+('RAM DDR4 32GB (2x16GB) Vengeance LPX', 'Corsair', 'RAM', 12, 3, 'New'),
+('RAM DDR5 32GB (2x16GB) Flare X5', 'G.Skill', 'RAM', 8, 2, 'New'),
+('RAM DDR4 8GB Fury Beast', 'Kingston', 'RAM', 25, 5, 'New'),
+('RAM DDR4 16GB (2x8GB) Spectrix D50 RGB', 'Adata XPG', 'RAM', 18, 4, 'New'),
+
+-- ==================== TYPE: PROCESSOR ====================
+('Intel Core i3-12100F', 'Intel', 'Processor', 15, 3, 'New'),
+('Intel Core i7-14700K', 'Intel', 'Processor', 6, 2, 'New'),
+('AMD Ryzen 5 7600X', 'AMD', 'Processor', 10, 2, 'New'),
+('AMD Ryzen 7 7800X3D', 'AMD', 'Processor', 5, 1, 'New'),
+
+-- ==================== TYPE: SSD ====================
+('SSD 1TB NVMe M.2 990 PRO', 'Samsung', 'SSD', 14, 3, 'New'),
+('SSD 500GB NVMe M.2 Crucial P3', 'Crucial', 'SSD', 22, 5, 'New'),
+('SSD 1TB NVMe M.2 SX8200 Pro', 'Adata', 'SSD', 19, 4, 'New'),
+
+-- ==================== TYPE: HDD ====================
+('HDD 2TB SATA3 Barracuda', 'Seagate', 'HDD', 12, 3, 'New'),
+('HDD 1TB SATA3 Blue', 'Western Digital', 'HDD', 15, 4, 'New'),
+
+-- ==================== TYPE: GPU ====================
+('GeForce RTX 4060 Ti 8GB', 'NVIDIA', 'GPU', 7, 2, 'New'),
+('GeForce RTX 4070 Super 12GB', 'NVIDIA', 'GPU', 4, 1, 'New'),
+('Radeon RX 6600 8GB SPEEDSTER', 'AMD', 'GPU', 9, 2, 'New'),
+('Radeon RX 7800 XT 16GB QICK', 'AMD', 'GPU', 5, 1, 'New'),
+
+-- ==================== TYPE: MOTHERBOARD ====================
+('ASUS ROG STRIX B650-A GAMING WIFI', 'ASUS', 'Motherboard', 6, 2, 'New'),
+('GIGABYTE B760M GAMING X AX', 'GIGABYTE', 'Motherboard', 11, 3, 'New'),
+('MSI MAG B650 TOMAHAWK WIFI', 'MSI', 'Motherboard', 8, 2, 'New'),
+('ASRock B450M HDV R4.0', 'ASRock', 'Motherboard', 15, 4, 'New');
+
+INSERT INTO softwares
 (software_name, VERSION, mata_kuliah, license_type)
 VALUES
 ('Visual Studio Code','1.100','Pemrograman','Free');

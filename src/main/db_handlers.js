@@ -640,7 +640,7 @@ export async function getDashboardSummary(labId = null) {
 
         SUM(
           CASE
-            WHEN pc_status = 'ACTIVE'
+            WHEN STATUS = 'Usable'
             THEN 1
             ELSE 0
           END
@@ -648,7 +648,7 @@ export async function getDashboardSummary(labId = null) {
 
         SUM(
           CASE
-            WHEN pc_status = 'BROKEN'
+            WHEN STATUS = 'Broken'
             THEN 1
             ELSE 0
           END
@@ -656,7 +656,7 @@ export async function getDashboardSummary(labId = null) {
 
         SUM(
           CASE
-            WHEN pc_status = 'MAINTENANCE'
+            WHEN STATUS = 'Maintenance'
             THEN 1
             ELSE 0
           END

@@ -6,11 +6,12 @@ import WarningIcon from '@mui/icons-material/Warning';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-export function TvDashboard({ user, onBack, onLogout }) {
+export function TvDashboard({ user, onBack, onLogout, isPublic = false }) {
   const [pcData, setPcData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [maintenanceFeed, setMaintenanceFeed] = useState([]);
+  const [publicLab, setPublicLab] = useState('E4');
 
   // Time ticker
   useEffect(() => {
@@ -54,6 +55,7 @@ export function TvDashboard({ user, onBack, onLogout }) {
   }, []);
 
   const handleBoxClick = (pc) => {
+    if (isPublic) return; // Prevent status change in public mode
     if (!pc) return; // Only open modal if PC exists in DB
     setSelectedPc(pc);
     setTempStatus(pc.STATUS || pc.status);
@@ -71,45 +73,28 @@ export function TvDashboard({ user, onBack, onLogout }) {
     }
   };
 
-  // Static Lab Layout Definition
-  const parsedLabs = (() => {
-    const codes = { 'E4': [], 'L2': [], 'L3': [], 'L4': [] };
-    
-    // Lab E4: 40 PCs
-    for(let i=1; i<=15; i++) codes['E4'].push(`A5${String(i).padStart(2, '0')}`);
-    for(let i=1; i<=10; i++) codes['E4'].push(`B5${String(i).padStart(2, '0')}`);
-    for(let i=1; i<=15; i++) codes['E4'].push(`C5${String(i).padStart(2, '0')}`);
-
-    // Lab L2: 40 PCs
-    ['A','B','C','D','E'].forEach(block => {
-      for(let i=1; i<=8; i++) codes['L2'].push(`${block}20${i}`);
-    });
-
-    // Lab L3: 40 PCs
-    ['A','B','C','D','E'].forEach(block => {
-      for(let i=1; i<=8; i++) codes['L3'].push(`${block}30${i}`);
-    });
-
-    // Lab L4: 40 PCs
-    for(let i=1; i<=12; i++) codes['L4'].push(`A4${String(i).padStart(2, '0')}`);
-    for(let i=1; i<=14; i++) codes['L4'].push(`B4${String(i).padStart(2, '0')}`);
-    for(let i=1; i<=14; i++) codes['L4'].push(`C4${String(i).padStart(2, '0')}`);
-
-    return codes;
-  })();
+  const allLabNames = ['E4', 'L2', 'L3', 'L4'];
 
   const isSuperAdmin = user?.role_name === 'SuperAdmin';
   const myLabName = user?.role_name?.includes('Admin') && !isSuperAdmin 
     ? user.role_name.replace('Admin ', '') 
     : null;
 
-  const labsToShow = isSuperAdmin ? Object.keys(parsedLabs) : (myLabName ? [myLabName] : []);
+  const labsToShow = isPublic 
+    ? [publicLab] 
+    : (isSuperAdmin ? allLabNames : (myLabName ? [myLabName] : []));
 
   // Compute Stats
-  const relevantCodes = labsToShow.flatMap(lab => parsedLabs[lab] || []);
   let active = 0, maintenanceCount = 0, broken = 0;
   
-  const matchedPcs = pcData.filter(pc => relevantCodes.some(code => pc.pc_code.includes(code)));
+  // Filter pcData by lab string matching (e.g., lab_name 'Laboratorium L2' includes 'L2' or pc_code includes 'L2')
+  const matchedPcs = pcData.filter(pc => 
+    labsToShow.some(labName => 
+      (pc.lab_name && pc.lab_name.includes(labName)) || 
+      (pc.lab_code && pc.lab_code === labName) ||
+      (pc.pc_code && pc.pc_code.includes(labName))
+    )
+  );
   
   matchedPcs.forEach(pc => {
     const s = pc.STATUS || pc.status;
@@ -118,7 +103,7 @@ export function TvDashboard({ user, onBack, onLogout }) {
     else if (s === 'Broken') broken++;
   });
   
-  const totalPc = relevantCodes.length;
+  const totalPc = matchedPcs.length;
 
   const getStatusColor = (status) => {
     if (status === 'Usable') return 'bg-[#22c55e] text-white border-[#16a34a] shadow-[0_4px_0_0_#16a34a]'; // Green
@@ -157,20 +142,46 @@ export function TvDashboard({ user, onBack, onLogout }) {
             </div>
           </div>
           <div className="h-10 w-px bg-white/20"></div>
-          <div className="flex gap-3">
-            <button 
-              onClick={onBack}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg font-semibold flex items-center gap-2 transition-colors"
-            >
-              <ArrowBackIcon sx={{ fontSize: 18 }} /> Kembali ke Dashboard
-            </button>
-            <button 
-              onClick={onLogout}
-              className="px-4 py-2 bg-white text-red-600 hover:bg-red-50 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm"
-            >
-              <LogoutIcon sx={{ fontSize: 18 }} /> Logout
-            </button>
-          </div>
+          
+          {isPublic ? (
+            <div className="flex gap-3 items-center">
+              <div className="relative flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-xl backdrop-blur-md border border-white/20 shadow-inner cursor-pointer">
+                <select 
+                  value={publicLab}
+                  onChange={(e) => setPublicLab(e.target.value)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                >
+                  {allLabNames.map(lab => (
+                    <option key={lab} value={lab} className="text-slate-800">Lab {lab}</option>
+                  ))}
+                </select>
+                <span className="text-blue-100 font-semibold text-sm pointer-events-none">Pilih Lab:</span>
+                <span className="text-white font-bold text-lg pointer-events-none">Lab {publicLab}</span>
+                <svg className="w-4 h-4 text-white pointer-events-none ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+              <button 
+                onClick={onBack}
+                className="px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md active:scale-95"
+              >
+                <ArrowBackIcon sx={{ fontSize: 18 }} /> Kembali
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <button 
+                onClick={onBack}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg font-semibold flex items-center gap-2 transition-colors"
+              >
+                <ArrowBackIcon sx={{ fontSize: 18 }} /> Kembali ke Dashboard
+              </button>
+              <button 
+                onClick={onLogout}
+                className="px-4 py-2 bg-white text-red-600 hover:bg-red-50 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm"
+              >
+                <LogoutIcon sx={{ fontSize: 18 }} /> Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -220,33 +231,42 @@ export function TvDashboard({ user, onBack, onLogout }) {
         {/* GRIDS */}
         <div className="flex-1 space-y-10">
           {labsToShow.map(labName => {
-            const codes = parsedLabs[labName] || [];
-            if (codes.length === 0) return null;
+            // Filter pcs for this specific lab and sort them alphabetically
+            const labPcs = pcData.filter(pc => 
+              (pc.lab_name && pc.lab_name.includes(labName)) || 
+              (pc.lab_code && pc.lab_code === labName) ||
+              (pc.pc_code && pc.pc_code.includes(labName))
+            ).sort((a, b) => a.pc_code.localeCompare(b.pc_code));
+
+            if (labPcs.length === 0) return (
+              <div key={labName} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 text-center text-slate-500 font-medium">
+                Belum ada PC yang terdaftar di Lab {labName}.
+              </div>
+            );
 
             return (
               <div key={labName} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-4 mb-6">
                   <h3 className="text-2xl font-bold text-slate-800">Lab {labName}</h3>
                   <span className="px-3 py-1 bg-slate-100 text-slate-600 text-sm font-semibold rounded-full">
-                    {codes.length} units
+                    {labPcs.length} units
                   </span>
                 </div>
                 
-                <div className="grid grid-rows-4 grid-cols-10 grid-flow-col gap-3">
-                  {codes.map((code, index) => {
-                    const pc = pcData.find(p => p.pc_code.includes(code));
-                    const status = pc ? (pc.STATUS || pc.status) : 'Missing';
-                    const boxLabel = code;
+                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+                  {labPcs.map((pc) => {
+                    const status = pc.STATUS || pc.status;
+                    const boxLabel = pc.pc_code;
                     const colorClass = getStatusColor(status);
 
                     return (
                       <div 
-                        key={code} 
+                        key={pc.pc_id} 
                         onClick={() => handleBoxClick(pc)}
-                        title={`Code: ${code}\nStatus: ${status}\nDB Match: ${pc ? pc.pc_code : 'None'}`}
-                        className={`aspect-square rounded-xl flex items-center justify-center font-bold text-sm transition-transform ${pc ? 'cursor-pointer hover:-translate-y-1 shadow-sm' : 'opacity-50 cursor-not-allowed'} ${colorClass}`}
+                        title={`Code: ${boxLabel}\nStatus: ${status}`}
+                        className={`aspect-square rounded-xl flex items-center justify-center font-bold text-sm transition-transform cursor-pointer hover:-translate-y-1 shadow-sm ${colorClass}`}
                       >
-                        {boxLabel}
+                        {boxLabel.length > 5 ? boxLabel.slice(-4) : boxLabel}
                       </div>
                     );
                   })}

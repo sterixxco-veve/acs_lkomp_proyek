@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-export const LoginScreen = ({ onLogin, goRegister }) => {
+export const LoginScreen = ({ onLogin, goRegister, onOpenTv }) => {
   const [creds, setCreds] = useState({ username: '', password: '' })
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -208,13 +208,24 @@ export const LoginScreen = ({ onLogin, goRegister }) => {
                 )}
               </button>
             </form>
-            <button
-              type="button"
-              onClick={goRegister}
-              className="text-sm text-blue-600 hover:underline mt-4 block"
-            >
-              Belum punya akun? Daftar di sini
-            </button>
+            
+            <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={onOpenTv}
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-lg transition-all shadow-md active:scale-95 duration-200 flex items-center justify-center gap-2"
+              >
+                📺 Buka Mode Layar TV (Tanpa Login)
+              </button>
+
+              <button
+                type="button"
+                onClick={goRegister}
+                className="text-sm text-blue-600 hover:underline block"
+              >
+                Belum punya akun? Daftar di sini
+              </button>
+            </div>
           </div>
 
           {/* Demo Credentials Info */}

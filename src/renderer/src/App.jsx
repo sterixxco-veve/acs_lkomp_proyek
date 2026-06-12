@@ -4,6 +4,7 @@ import { LoginScreen } from './components/LoginScreen'
 import { RegisterScreen } from './components/RegisterScreen'
 import { Dashboard } from './components/Dashboard'
 import MasterPeminjam from './components/MasterPeminjam'
+import { TvDashboard } from './components/TvDashboard'
 
 function App() {
   const [screen, setScreen] = useState('login')
@@ -25,6 +26,7 @@ function App() {
         <LoginScreen
           onLogin={handleLogin}
           goRegister={() => setScreen('register')}
+          onOpenTv={() => setScreen('tv-dashboard-public')}
         />
       )}
 
@@ -44,6 +46,13 @@ function App() {
 
       {screen === 'master-peminjam' && (
         <MasterPeminjam />
+      )}
+
+      {screen === 'tv-dashboard-public' && (
+        <TvDashboard
+          isPublic={true}
+          onBack={() => setScreen('login')}
+        />
       )}
     </>
   )
