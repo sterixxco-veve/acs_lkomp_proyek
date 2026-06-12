@@ -949,7 +949,7 @@ CREATE PROCEDURE sp_add_pc (
     IN p_mobo VARCHAR(100), IN p_cooling VARCHAR(100), IN p_psu VARCHAR(100), IN p_gpu VARCHAR(100)
 )
 BEGIN
-    INSERT INTO pcs (pc_code, lab_id, processor, ram, STORAGE, motherboard, cooling, gpu, STATUS)
+    INSERT INTO pcs (pc_code, lab_id, processor, ram, STORAGE, motherboard, cooling, psu, gpu, STATUS)
     VALUES (p_code, p_lab, p_proc, p_ram, p_storage, p_mobo, p_cooling, p_psu, p_gpu, 'Usable');
 END $$
 DELIMITER ;
