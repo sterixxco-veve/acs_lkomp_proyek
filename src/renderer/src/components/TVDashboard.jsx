@@ -76,9 +76,7 @@ export function TvDashboard({ user, onBack, onLogout, isPublic = false }) {
   const allLabNames = ['E4', 'L2', 'L3', 'L4'];
 
   const isSuperAdmin = user?.role_name === 'SuperAdmin';
-  const myLabName = user?.role_name?.includes('Admin') && !isSuperAdmin 
-    ? user.role_name.replace('Admin ', '') 
-    : null;
+  const myLabName = user?.lab_code || null;
 
   const labsToShow = isPublic 
     ? [publicLab] 
