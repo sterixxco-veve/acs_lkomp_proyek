@@ -6,10 +6,11 @@ import bcrypt from 'bcryptjs'
 // ========================================
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'lkomp_admin',
-  password: 'admin_password',
+  host: 'mysql-acslkomp-acslkomp.e.aivencloud.com',
+  user: 'avnadmin',
+  password: 'AVNS__tyiILILrwSe_0x-Uf3',
   database: 'acs_lkomp',
+  port: 22528,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -640,7 +641,7 @@ export async function getDashboardSummary(labId = null) {
 
         SUM(
           CASE
-            WHEN pc_status = 'ACTIVE'
+            WHEN STATUS = 'Usable'
             THEN 1
             ELSE 0
           END
@@ -648,7 +649,7 @@ export async function getDashboardSummary(labId = null) {
 
         SUM(
           CASE
-            WHEN pc_status = 'BROKEN'
+            WHEN STATUS = 'Broken'
             THEN 1
             ELSE 0
           END
@@ -656,7 +657,7 @@ export async function getDashboardSummary(labId = null) {
 
         SUM(
           CASE
-            WHEN pc_status = 'MAINTENANCE'
+            WHEN STATUS = 'Maintenance'
             THEN 1
             ELSE 0
           END
