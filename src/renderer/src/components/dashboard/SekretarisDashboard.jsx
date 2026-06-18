@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { PDFTemplate } from '../PDFTemplate'
+import { useOutletContext } from 'react-router-dom'
 
-export function SekretarisDashboard({ user }) {
+export function SekretarisDashboard() {
+  const {user} = useOutletContext()
+
   const [pdfData, setPdfData] = useState(null)
   const [peminjams, setPeminjams] = useState([])
   const [selectedLab, setSelectedLab] = useState("")

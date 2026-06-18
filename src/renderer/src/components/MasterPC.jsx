@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
+import { useOutletContext } from 'react-router-dom'
 
-export const MasterPC = ({ user }) => {
+export const MasterPC = () => {
+  const { user } = useOutletContext()
+
   const [pcData, setPcData] = useState([])
   const [labs, setLabs] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -224,7 +227,7 @@ export const MasterPC = ({ user }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* HEADER & FILTER (Sama seperti sebelumnya) */}
       <div className="flex justify-between items-start">
         <div>

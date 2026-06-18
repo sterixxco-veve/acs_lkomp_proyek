@@ -7,7 +7,11 @@ import DownloadIcon from "@mui/icons-material/Download";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 
-export function Reports({ user }) {
+import { useOutletContext } from "react-router-dom";
+
+export function Reports() {
+  const {user} = useOutletContext()
+
   const [healthStatus, setHealthStatus] = useState([]);
   const [maintenanceTrend, setMaintenanceTrend] = useState([]);
   const [mostReplaced, setMostReplaced] = useState([]);

@@ -6,7 +6,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 
-export function MaintenanceTransaction({ user }) {
+import { useOutletContext } from "react-router-dom";
+
+export function MaintenanceTransaction() {
+    const {user} = useOutletContext()
     const [brokenPCs, setBrokenPCs] = useState([]);
     const [availableComponents, setAvailableComponents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
