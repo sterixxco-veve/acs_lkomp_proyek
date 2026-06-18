@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 
-export const Settings = ({ user }) => {
+export const Settings = () => {
+  const { user } = useOutletContext()
+
   const [formData, setFormData] = useState({
     username: user?.username || '',
     full_name: user?.full_name || '',

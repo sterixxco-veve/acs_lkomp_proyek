@@ -1,19 +1,21 @@
 import React from 'react'
-import { Settings } from '../Settings'
-import { MasterPC } from '../MasterPC'
-import { MasterComponents } from '../MasterComponents'
-import { MasterSoftware } from '../MasterSoftware'
-import { MaintenanceTransaction } from '../MaintenanceTransaction'
-import { Reports } from '../Reports'
+import { useOutletContext } from 'react-router-dom'
 
-export const SuperAdminDashboard = ({ user, activeMenu }) => {
+// import { Settings } from '../Settings'
+// import { MasterPC } from '../MasterPC'
+// import { MasterComponents } from '../MasterComponents'
+// import { MasterSoftware } from '../MasterSoftware'
+// import { MaintenanceTransaction } from '../MaintenanceTransaction'
+// import { Reports } from '../Reports'
+
+// export const SuperAdminDashboard = ({ user, activeMenu }) => {
+export const SuperAdminDashboard = () => {
+  const {user} = useOutletContext
   return (
-    // Kita hapus w-full dan h-screen karena sudah di-handle oleh flex-1 di Dashboard.jsx
     <div className="p-8 w-full">
-      {/* RENDER KOMPONEN BERDASARKAN MENU YANG DIKLIK DARI SIDEBAR */}
 
       {/* Jika value dari sidebar adalah 'Dashboard' */}
-      {activeMenu === 'Dashboard' && (
+      {/* {activeMenu === 'Dashboard' && ( */}
       <div className="animate-in fade-in duration-300">
         <h2 className="text-4xl font-bold text-[#1E293B] mb-2">
           SuperAdmin Dashboard
@@ -93,46 +95,9 @@ export const SuperAdminDashboard = ({ user, activeMenu }) => {
           </div>
         </div>
       </div>
-    )}
+    {/* )} */}
 
-      {/* Jika value dari sidebar adalah 'Master PC' */}
-      {activeMenu === 'Master PC' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MasterPC user={user} />
-        </div>
-      )}
-
-      {/* Jika value dari sidebar adalah 'Components' */}
-      {activeMenu === 'Components' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MasterComponents user={user} />
-        </div>
-      )}
-
-      {/* Jika value dari sidebar adalah 'Software' */}
-      {activeMenu === 'Software' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MasterSoftware user={user} />
-        </div>
-      )}
-
-      {activeMenu === 'Maintenance' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MaintenanceTransaction user={user} />
-        </div>
-      )}
-
-      {activeMenu === 'Reports' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Reports user={user} />
-        </div>
-      )}
-
-      {activeMenu === 'Settings' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Settings user={user} />
-        </div>
-      )}
+      
     </div>
   )
 }

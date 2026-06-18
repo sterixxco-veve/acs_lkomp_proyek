@@ -379,7 +379,7 @@ export const MasterSoftware = ({ user }) => {
   })
 
   return (
-    <div className="space-y-8">
+    <div className="p-8 w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* HEADER */}
       <div className="flex justify-between items-start">
         <div>

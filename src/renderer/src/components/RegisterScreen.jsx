@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-export const RegisterScreen = ({ onBackToLogin }) => {
+export const RegisterScreen = () => {
+  const navigate = useNavigate()
+
   const [form, setForm] = useState({
     full_name: '',
     username: '',
@@ -73,7 +76,7 @@ export const RegisterScreen = ({ onBackToLogin }) => {
         setSuccess('Registrasi berhasil!')
 
         setTimeout(() => {
-          onBackToLogin()
+          navigate('/')
         }, 1500)
       } else {
         setError(res.message || 'Registrasi gagal')
@@ -216,7 +219,7 @@ export const RegisterScreen = ({ onBackToLogin }) => {
 
         {/* Back Button */}
         <button
-          onClick={onBackToLogin}
+          onClick={() => navigate('/')}
           className="mt-5 text-sm text-black hover:text-blue-600 transition-colors"
         >
           ← Kembali ke Login

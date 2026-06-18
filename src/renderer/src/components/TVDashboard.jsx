@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import ComputerIcon from '@mui/icons-material/Computer';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import BuildIcon from '@mui/icons-material/Build';
@@ -6,7 +8,9 @@ import WarningIcon from '@mui/icons-material/Warning';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-export function TvDashboard({ user, onBack, onLogout, isPublic = false }) {
+export function TvDashboard({ user, onLogout, isPublic = false }) {
+  const navigate = useNavigate()
+
   const [pcData, setPcData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -158,7 +162,7 @@ export function TvDashboard({ user, onBack, onLogout, isPublic = false }) {
                 <svg className="w-4 h-4 text-white pointer-events-none ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </div>
               <button 
-                onClick={onBack}
+                onClick={() => navigate(-1)}
                 className="px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md active:scale-95"
               >
                 <ArrowBackIcon sx={{ fontSize: 18 }} /> Kembali
@@ -167,7 +171,7 @@ export function TvDashboard({ user, onBack, onLogout, isPublic = false }) {
           ) : (
             <div className="flex gap-3">
               <button 
-                onClick={onBack}
+                onClick={() => navigate(-1)}
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg font-semibold flex items-center gap-2 transition-colors"
               >
                 <ArrowBackIcon sx={{ fontSize: 18 }} /> Kembali ke Dashboard

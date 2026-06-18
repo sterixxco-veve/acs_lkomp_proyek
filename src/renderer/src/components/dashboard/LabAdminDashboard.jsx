@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
+// import { Settings } from '../Settings'
+// import { MasterPC } from '../MasterPC'
+// import { MasterComponents } from '../MasterComponents'
+// import { MasterSoftware } from '../MasterSoftware'
 
-import { Settings } from '../Settings'
-import { MasterPC } from '../MasterPC'
-import { MasterComponents } from '../MasterComponents'
-import { MasterSoftware } from '../MasterSoftware'
+export const LabAdminDashboard = () => {
+  const {user} = useOutletContext()
 
-export const LabAdminDashboard = ({ user, activeMenu }) => {
   const [summary, setSummary] = useState({
     total_pc: 0,
     active_pc: 0,
@@ -38,7 +40,7 @@ export const LabAdminDashboard = ({ user, activeMenu }) => {
     <div className="p-8 w-full">
 
       {/* DASHBOARD */}
-      {activeMenu === 'Dashboard' && (
+      {/* {activeMenu === 'Dashboard' && ( */}
         <div className="animate-in fade-in duration-300">
 
           <h2 className="text-4xl font-bold text-[#1E293B] mb-2">
@@ -161,53 +163,9 @@ export const LabAdminDashboard = ({ user, activeMenu }) => {
           </div>
 
         </div>
-      )}
+      {/* )} */}
 
-      {/* MASTER PC */}
-      {activeMenu === 'Master PC' && (
-        <MasterPC user={user} />
-      )}
-
-      {/* COMPONENTS */}
-      {activeMenu === 'Components' && (
-        <MasterComponents user={user} />
-      )}
-
-      {/* SOFTWARE */}
-      {activeMenu === 'Software' && (
-        <MasterSoftware user={user} />
-      )}
-
-      {/* MAINTENANCE */}
-      {activeMenu === 'Maintenance' && (
-        <div className="bg-white rounded-3xl p-6 shadow-sm">
-          <h2 className="text-3xl font-bold mb-2">
-            Maintenance Module
-          </h2>
-
-          <p className="text-slate-500">
-            Halaman maintenance akan ditampilkan di sini.
-          </p>
-        </div>
-      )}
-
-      {/* REPORTS */}
-      {activeMenu === 'Reports' && (
-        <div className="bg-white rounded-3xl p-6 shadow-sm">
-          <h2 className="text-3xl font-bold mb-2">
-            Reports Module
-          </h2>
-
-          <p className="text-slate-500">
-            Halaman laporan akan ditampilkan di sini.
-          </p>
-        </div>
-      )}
-
-      {/* SETTINGS */}
-      {activeMenu === 'Settings' && (
-        <Settings user={user} />
-      )}
+      
 
     </div>
   )
