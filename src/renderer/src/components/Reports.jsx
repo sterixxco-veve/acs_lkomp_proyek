@@ -6,6 +6,8 @@ import {
 import DownloadIcon from "@mui/icons-material/Download";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 import { useOutletContext } from "react-router-dom";
 
@@ -17,6 +19,8 @@ export function Reports() {
   const [mostReplaced, setMostReplaced] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [labPCs, setLabPCs] = useState([]);
+  const [reliabilityLog, setReliabilityLog] = useState([]);
+  const [weekDates, setWeekDates] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const isSuperAdmin = user?.role_name === 'SuperAdmin';
@@ -29,11 +33,12 @@ export function Reports() {
       try {
         setLoading(true);
         // Fetch all data concurrently
-        const [healthData, trendData, replacedData, stockData] = await Promise.all([
+        const [healthData, trendData, replacedData, stockData, reliabilityData] = await Promise.all([
           window.api.getHealth(),
           window.api.getMaintenanceTrend(),
           window.api.getMostReplacedComponents(),
-          window.api.getLowStock()
+          window.api.getLowStock(),
+          window.api.getReliabilityLog()
         ]);
 
         if (!isSuperAdmin && user?.lab_id) {
@@ -69,6 +74,24 @@ export function Reports() {
         // Process Low Stock
         setLowStock(stockData);
 
+        // Process Reliability Data
+        setReliabilityLog(reliabilityData || []);
+        
+        // Generate 16 past weeks data
+        const weeks = [];
+        for (let i = 15; i >= 0; i--) {
+          const end = new Date();
+          end.setDate(end.getDate() - (i * 7));
+          const start = new Date(end);
+          start.setDate(start.getDate() - 6);
+          weeks.push({
+            weekNum: 16 - i,
+            start,
+            end
+          });
+        }
+        setWeekDates(weeks);
+
       } catch (error) {
         console.error("Error fetching reports data:", error);
       } finally {
@@ -78,6 +101,103 @@ export function Reports() {
 
     fetchData();
   }, []);
+
+  const checkNotAvailable = (weekStart, weekEnd, labCode, pcId = null) => {
+    return reliabilityLog.some(log => {
+      const maintDate = new Date(log.maintenance_date);
+      const complDate = log.completed_date ? new Date(log.completed_date) : new Date();
+      
+      const isOverlap = (maintDate <= weekEnd && complDate >= weekStart);
+      
+      if (!isOverlap) return false;
+      
+      if (pcId) {
+        return log.pc_id === pcId;
+      }
+      return log.lab_code === labCode;
+    });
+  };
+
+  const exportReliabilityPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Reliability Log Semester (16 Weeks) ${isSuperAdmin ? '' : `- Lab ${labName}`}`, 14, 15);
+    
+    let head = [];
+    let body = [];
+
+    if (isSuperAdmin) {
+      head = [['Week', 'Lab E4', 'Lab L4', 'Lab L3', 'Lab L2']];
+      body = weekDates.map((w) => {
+        const row = [`W${w.weekNum}`];
+        ['E4', 'L4', 'L3', 'L2'].forEach(lab => {
+          row.push(checkNotAvailable(w.start, w.end, lab) ? 'X' : 'V');
+        });
+        return row;
+      });
+    } else {
+      head = [['PC Code', ...weekDates.map(w => `W${w.weekNum}`)]];
+      body = labPCs.map((pc) => {
+        const row = [pc.pc_code];
+        weekDates.forEach(w => {
+          row.push(checkNotAvailable(w.start, w.end, pc.lab_code, pc.pc_id) ? 'X' : 'V');
+        });
+        return row;
+      });
+    }
+
+    autoTable(doc, {
+      head: head,
+      body: body,
+      startY: 25,
+      styles: { halign: 'center' },
+      columnStyles: { 0: { halign: 'left' } }
+    });
+
+    doc.save(`Reliability_Log_${isSuperAdmin ? 'All_Labs' : labName}.pdf`);
+  };
+
+  const exportHealthStatusPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Health Status per Lab', 14, 15);
+    const head = [['Lab Name', 'Usable', 'Maintenance', 'Broken']];
+    const body = healthStatus.map(item => [item.lab, item.Usable, item.Maintenance, item.Broken]);
+    autoTable(doc, { head, body, startY: 25 });
+    doc.save('Health_Status_Report.pdf');
+  };
+
+  const exportMaintenanceTrendPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Maintenance Trend (6 Months)', 14, 15);
+    const head = [['Month', 'Total Maintenance']];
+    const body = maintenanceTrend.map(item => [item.month, item.total]);
+    autoTable(doc, { head, body, startY: 25 });
+    doc.save('Maintenance_Trend_Report.pdf');
+  };
+
+  const exportMostReplacedPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Most Replaced Components', 14, 15);
+    const head = [['Component Name', 'Total Replaced']];
+    const body = mostReplaced.map(item => [item.name, item.value]);
+    autoTable(doc, { head, body, startY: 25 });
+    doc.save('Most_Replaced_Components_Report.pdf');
+  };
+
+  const exportLowStockPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Low Stock Alert', 14, 15);
+    const head = [['Component Name', 'Current Stock', 'Minimum Required', 'Status']];
+    const body = lowStock.map(item => {
+      const stock = parseInt(item.stock);
+      const minStock = parseInt(item.min_stock);
+      let statusLabel = item.STATUS || 'Safe';
+      if (stock <= minStock) statusLabel = 'Critical';
+      else if (stock <= minStock + 3) statusLabel = 'Warning';
+      return [item.component_name, stock, minStock, statusLabel];
+    });
+    autoTable(doc, { head, body, startY: 25 });
+    doc.save('Low_Stock_Report.pdf');
+  };
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -112,8 +232,11 @@ export function Reports() {
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">Health Status per Lab</h2>
-          <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors">
-            <DownloadIcon style={{ fontSize: 16 }} /> Export
+          <button 
+            onClick={exportHealthStatusPDF}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors"
+          >
+            <DownloadIcon style={{ fontSize: 16 }} /> Export PDF
           </button>
         </div>
         <div className="h-72 w-full">
@@ -138,8 +261,11 @@ export function Reports() {
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Maintenance Trend (6 Months)</h2>
-            <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors">
-              <DownloadIcon style={{ fontSize: 16 }} /> Export
+            <button 
+              onClick={exportMaintenanceTrendPDF}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors"
+            >
+              <DownloadIcon style={{ fontSize: 16 }} /> Export PDF
             </button>
           </div>
           <div className="h-64 w-full">
@@ -159,8 +285,11 @@ export function Reports() {
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Most Replaced Components</h2>
-            <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors">
-              <DownloadIcon style={{ fontSize: 16 }} /> Export
+            <button 
+              onClick={exportMostReplacedPDF}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors"
+            >
+              <DownloadIcon style={{ fontSize: 16 }} /> Export PDF
             </button>
           </div>
           <div className="h-64 w-full flex justify-center items-center">
@@ -195,8 +324,11 @@ export function Reports() {
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">Low Stock Alert</h2>
-          <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors">
-            <DownloadIcon style={{ fontSize: 16 }} /> Export
+          <button 
+            onClick={exportLowStockPDF}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors"
+          >
+            <DownloadIcon style={{ fontSize: 16 }} /> Export PDF
           </button>
         </div>
         <div className="overflow-x-auto">
@@ -265,7 +397,10 @@ export function Reports() {
           <h2 className="text-lg font-semibold text-gray-800">
             Reliability Log Semester (16 Weeks) {isSuperAdmin ? '' : `- Lab ${labName}`}
           </h2>
-          <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors">
+          <button 
+            onClick={exportReliabilityPDF}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-700 transition-colors"
+          >
             <DownloadIcon style={{ fontSize: 16 }} /> Export PDF
           </button>
         </div>
@@ -283,8 +418,8 @@ export function Reports() {
               ) : (
                 <tr>
                   <th scope="col" className="px-6 py-3 font-medium">PC Code</th>
-                  {Array.from({ length: 16 }, (_, i) => (
-                    <th key={i} scope="col" className="px-3 py-3 font-medium text-center">W{i + 1}</th>
+                  {weekDates.map((w, i) => (
+                    <th key={i} scope="col" className="px-3 py-3 font-medium text-center">W{w.weekNum}</th>
                   ))}
                 </tr>
               )}
@@ -292,14 +427,12 @@ export function Reports() {
             <tbody>
               {isSuperAdmin ? (
                 // SUPER ADMIN VIEW
-                Array.from({ length: 16 }, (_, i) => {
-                  const week = i + 1;
+                weekDates.map((w) => {
                   return (
-                    <tr key={week} className="bg-white border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">W{week}</td>
-                      {['E4', 'L4', 'L3', 'L2'].map((lab, index) => {
-                        // Dummy deterministic logic for "Not Available"
-                        const isNotAvailable = (week * (index + 2)) % 11 === 0 || (week === 2 && lab === 'E4');
+                    <tr key={w.weekNum} className="bg-white border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">W{w.weekNum}</td>
+                      {['E4', 'L4', 'L3', 'L2'].map((lab) => {
+                        const isNotAvailable = checkNotAvailable(w.start, w.end, lab);
                         return (
                           <td key={lab} className="px-6 py-4 text-center">
                             {isNotAvailable ? (
@@ -316,15 +449,13 @@ export function Reports() {
               ) : (
                 // ADMIN LAB VIEW
                 labPCs.length > 0 ? (
-                  labPCs.map((pc, pcIndex) => (
+                  labPCs.map((pc) => (
                     <tr key={pc.pc_id} className="bg-white border-b border-gray-50 hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{pc.pc_code}</td>
-                      {Array.from({ length: 16 }, (_, i) => {
-                        const week = i + 1;
-                        // Dummy deterministic logic for PC
-                        const isNotAvailable = (pc.pc_id * week) % 19 === 0 || (week === 3 && pcIndex === 2);
+                      {weekDates.map((w) => {
+                        const isNotAvailable = checkNotAvailable(w.start, w.end, pc.lab_code, pc.pc_id);
                         return (
-                          <td key={week} className="px-3 py-4 text-center">
+                          <td key={w.weekNum} className="px-3 py-4 text-center">
                             {isNotAvailable ? (
                               <CancelIcon style={{ color: '#ef4444', fontSize: 18 }} />
                             ) : (

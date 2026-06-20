@@ -136,6 +136,10 @@ function registerIpcHandlers() {
     return await db.getMostReplacedComponents()
   })
 
+  ipcMain.handle('db:getReliabilityLog', async () => {
+    return await db.getReliabilityLog()
+  })
+
   ipcMain.handle('db:getDashboardSummary', async (_, labId) => {
     return await db.getDashboardSummary(labId)
   })

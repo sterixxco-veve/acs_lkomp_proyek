@@ -28,7 +28,7 @@ export function MaintenanceTransaction() {
         try {
             const labId = user?.role_name === 'SuperAdmin' ? null : user?.lab_id;
             const pcs = await window.api.getPCs(labId);
-            setBrokenPCs(pcs.filter(pc => pc.status !== 'Usable'));
+            setBrokenPCs(pcs.filter(pc => pc.STATUS === 'Broken'));
 
             const components = await window.api.getComponents();
             setAvailableComponents(components);

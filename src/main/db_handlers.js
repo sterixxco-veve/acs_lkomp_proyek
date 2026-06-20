@@ -619,6 +619,40 @@ export async function getMostReplacedComponents() {
   }
 }
 
+export async function getReliabilityLog() {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        m.maintenance_id,
+        m.pc_id,
+        p.lab_id,
+        l.lab_code,
+        m.maintenance_date,
+        m.completed_date
+      FROM maintenance m
+      JOIN pcs p ON m.pc_id = p.pc_id
+      JOIN labs l ON p.lab_id = l.lab_id
+      WHERE m.maintenance_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 16 WEEK)
+      
+      UNION ALL
+      
+      SELECT 
+        NULL as maintenance_id,
+        p.pc_id,
+        p.lab_id,
+        l.lab_code,
+        p.updated_at as maintenance_date,
+        NULL as completed_date
+      FROM pcs p
+      JOIN labs l ON p.lab_id = l.lab_id
+      WHERE p.STATUS IN ('Broken', 'Maintenance')
+    `)
+    return rows
+  } catch (err) {
+    return []
+  }
+}
+
 // ========================================
 // TV DASHBOARD
 // ========================================
@@ -816,6 +850,7 @@ export default {
   getLowStock,
   getMaintenanceTrend,
   getMostReplacedComponents,
+  getReliabilityLog,
 
   getDashboardSummary,
   getLiveActivity

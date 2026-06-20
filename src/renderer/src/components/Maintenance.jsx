@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { Badge } from './Badge'
 
 export const Maintenance = () => {
@@ -14,6 +15,22 @@ export const Maintenance = () => {
     technician: '',
     expectedEnd: ''
   })
+  const { user } = useOutletContext()
+  const [brokenPCs, setBrokenPCs] = useState([])
+
+  useEffect(() => {
+    const fetchBrokenPCs = async () => {
+      try {
+        const labId = user?.role_name === 'SuperAdmin' ? null : user?.lab_id
+        const pcs = await window.api.getPCs(labId)
+        const filtered = pcs.filter(pc => pc.STATUS === 'Broken')
+        setBrokenPCs(filtered)
+      } catch (error) {
+        console.error("Error fetching broken PCs:", error)
+      }
+    }
+    fetchBrokenPCs()
+  }, [user])
 
   const maintenanceData = [
     {
@@ -422,13 +439,16 @@ export const Maintenance = () => {
             <div className="p-8 space-y-6 max-h-[600px] overflow-y-auto">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">PC Code</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: E4-PC-042"
+                <select
                   value={formData.pcCode}
                   onChange={(e) => setFormData({ ...formData, pcCode: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                />
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 appearance-none cursor-pointer transition-all"
+                >
+                  <option value="">Pilih PC (Hanya Status Broken)</option>
+                  {brokenPCs.map(pc => (
+                    <option key={pc.pc_id} value={pc.pc_code}>{pc.pc_code} - Lab {pc.lab_code}</option>
+                  ))}
+                </select>
               </div>
 
               <div>

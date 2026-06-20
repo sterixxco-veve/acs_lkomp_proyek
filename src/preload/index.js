@@ -52,6 +52,8 @@ const api = {
 
   getMostReplacedComponents: () => ipcRenderer.invoke('db:getMostReplacedComponents'),
 
+  getReliabilityLog: () => ipcRenderer.invoke('db:getReliabilityLog'),
+
   getDashboardSummary: (labId) => ipcRenderer.invoke('db:getDashboardSummary', labId),
 
   getLiveActivity: () => ipcRenderer.invoke('db:getLiveActivity'),
