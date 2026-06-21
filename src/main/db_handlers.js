@@ -820,6 +820,7 @@ export default {
   addPC,
   updatePC,
   updatePcStatusOnly,
+  updatePcSoftware,
   deletePC,
   getPcInstalledSoftware,
 
