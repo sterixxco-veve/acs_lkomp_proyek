@@ -17,7 +17,7 @@ const api = {
   updatePcStatusOnly: (pcId, status) =>
     ipcRenderer.invoke('db:updatePcStatusOnly', { pcId, status }),
 
-  deletePC: (data) => ipcRenderer.invoke('db:deletePC', id),
+  deletePC: (id) => ipcRenderer.invoke('db:deletePC', id),
 
   getPcInstalledSoftware: (pcId) => ipcRenderer.invoke('db:getPcInstalledSoftware', pcId),
 

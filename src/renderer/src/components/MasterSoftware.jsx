@@ -214,8 +214,10 @@
 // }
 
 import React, { useState, useEffect } from 'react'
+import { useOutletContext } from 'react-router-dom'
 
-export const MasterSoftware = ({ user }) => {
+export const MasterSoftware = () => {
+  const {user} = useOutletContext()
   const [softwareData, setSoftwareData] = useState([])
   const [labsMaster, setLabsMaster] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -232,7 +234,7 @@ export const MasterSoftware = ({ user }) => {
     mata_kuliah: 'Pemrograman Dasar',
     license_type: 'Free',
     license_expiry: '',
-    lab_ids: []
+    lab_id: ''
   }
   const [formData, setFormData] = useState(initialForm)
 
@@ -268,7 +270,7 @@ export const MasterSoftware = ({ user }) => {
       mata_kuliah: s.MATA_KULIAH || s.mata_kuliah,
       license_type: s.LICENSE_TYPE || s.license_type,
       license_expiry: s.LICENSE_EXPIRY || s.license_expiry,
-      lab_ids: s.LAB_IDS || s.lab_ids,
+      lab_id: s.LAB_ID || s.lab_id,
       lab_names: s.LAB_NAMES || s.lab_names,
       installed_count: s.INSTALLED_COUNT || s.installed_count || 0
     }))
@@ -276,22 +278,11 @@ export const MasterSoftware = ({ user }) => {
     setSoftwareData(formattedData)
   }
 
-  const handleLabToggle = (labId) => {
-    setFormData((prev) => {
-      const currentLabs = prev.lab_ids
-      if (currentLabs.includes(labId)) {
-        return { ...prev, lab_ids: currentLabs.filter((id) => id !== labId) }
-      } else {
-        return { ...prev, lab_ids: [...currentLabs, labId] }
-      }
-    })
-  }
-
   const handleOpenAdd = () => {
     setFormData({
       ...initialForm,
       // Kalau Admin Lab, otomatis array diisi lab-nya sendiri
-      lab_ids: user?.role_id !== 5 ? [user?.lab_id] : []
+      lab_id: user?.role_id === 5 ? '' : user?.lab_id
     })
     setIsAddOpen(true)
   }
@@ -302,12 +293,11 @@ export const MasterSoftware = ({ user }) => {
       ? new Date(sw.license_expiry).toISOString().split('T')[0]
       : ''
     // String "1,2,3" jadi array [1,2,3]
-    const labIdsArray = sw.lab_ids ? String(sw.lab_ids).split(',').map(Number) : []
 
     setFormData({
       ...sw,
       license_expiry: formattedDate,
-      lab_ids: labIdsArray
+      lab_id: sw.lab_id || ''
     })
     setIsEditOpen(true)
   }
@@ -323,9 +313,36 @@ export const MasterSoftware = ({ user }) => {
       return
     }
 
+    // 2. 🔥 VALIDASI TANGGAL EXPIRED 🔥
+    if (formData.license_expiry) {
+      const selectedDate = new Date(formData.license_expiry)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0) // Reset jam/menit/detik biar perbandingannya adil
+
+      if (selectedDate < today) {
+        alert('🚨 Tanggal Expired tidak boleh kurang dari hari ini!')
+        return // Stop fungsi, jangan kirim ke database
+      }
+    }
+
+    const finalLabId = user?.role_id === 5 ? formData.lab_id : user?.lab_id;
+
     const payload = {
-      ...formData,
-      license_expiry: formData.license_expiry || null
+      // 1. WAJIB ADA UNTUK MODE EDIT (KTP-nya Software)
+      software_id: formData.software_id || null,
+
+      // 2. Data Utama
+      software_name: formData.software_name || null,
+      version: formData.version || null,
+      mata_kuliah: formData.mata_kuliah || null,
+      license_type: formData.license_type || null,
+
+      // 3. JURUS TANGKAL MISKOMUNIKASI TANGGAL
+      // Kirim 2 nama sekaligus, kalau string kosong '' ubah paksa jadi null
+      license_expiry: formData.license_expiry === '' ? null : formData.license_expiry,
+      expired_date: formData.license_expiry === '' ? null : formData.license_expiry,
+
+      lab_id: finalLabId ? parseInt(finalLabId) : null
     }
 
     const res = isEdit
@@ -434,7 +451,13 @@ export const MasterSoftware = ({ user }) => {
       {/* GRID CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredData.map((software) => {
-          const labsArray = software.lab_names ? String(software.lab_names).split(', ') : []
+          const assignedLab = labsMaster.find(l => l.id == software.lab_id)
+
+          console.log("=== CEK KARTU SOFTWARE ===");
+          console.log("Nama Software:", software.software_name);
+          console.log("Isi lab_id dari DB:", software.lab_id, "| Tipe:", typeof software.lab_id);
+          console.log("Semua daftar LabsMaster:", labsMaster);
+          console.log("Hasil pencocokan (assignedLab):", assignedLab);
           return (
             <div
               key={software.software_id}
@@ -490,20 +513,15 @@ export const MasterSoftware = ({ user }) => {
                   </p>
                   <p className="text-sm font-semibold text-slate-800">{software.mata_kuliah}</p>
                 </div>
+
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Access Labs
-                  </p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Akses Lab</p>
                   <div className="flex flex-wrap gap-2">
-                    {labsArray.map((lab, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-md"
-                      >
-                        {lab}
+                    {assignedLab ? (
+                      <span className="bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-md">
+                        {assignedLab.name}
                       </span>
-                    ))}
-                    {labsArray.length === 0 && (
+                    ) : (
                       <span className="text-sm text-slate-400 font-medium">Belum ada lab</span>
                     )}
                   </div>
@@ -614,34 +632,29 @@ export const MasterSoftware = ({ user }) => {
 
                 <div className="col-span-2">
                   <label className="block text-sm font-bold text-slate-700 mb-2">Akses Lab</label>
-                  <div className="flex flex-wrap gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50">
+            
                     {user?.role_id === 5 ? (
-                      labsMaster.map((lab) => (
-                        <label key={lab.id} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.lab_ids.includes(lab.id)}
-                            onChange={() => handleLabToggle(lab.id)}
-                            className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-slate-700">{lab.name}</span>
-                        </label>
-                      ))
-                    ) : (
-                      <label className="flex items-center gap-2 cursor-not-allowed opacity-75">
-                        <input
-                          type="checkbox"
-                          checked={true}
-                          readOnly
-                          className="w-4 h-4 text-blue-600 rounded border-slate-300 bg-blue-100"
-                        />
-                        <span className="text-sm text-slate-700">
-                          {labsMaster.find((l) => l.id == user?.lab_id)?.name || 'Lab Anda'}
-                        </span>
-                        <span className="text-xs text-slate-500 ml-2">(Auto-locked)</span>
-                      </label>
-                    )}
-                  </div>
+                    // SUPERADMIN: Pakai Dropdown
+                    <select
+                      value={formData.lab_id}
+                      onChange={(e) => setFormData({ ...formData, lab_id: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-blue-500 bg-white cursor-pointer"
+                    >
+                      <option value="">Pilih Lab...</option>
+                      {labsMaster.map((lab) => (
+                        <option key={lab.id} value={lab.id}>
+                          {lab.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    // ADMIN LAB: Dikunci (Sesuai lab mereka)
+                    <div className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium cursor-not-allowed">
+                      {labsMaster.find((l) => l.id == user?.lab_id)?.name || 'Lab Anda'}
+                      <span className="text-xs text-slate-500 ml-2">(Auto-locked)</span>
+                    </div>
+                  )}
+                  
                 </div>
 
                 <div>

@@ -174,23 +174,49 @@ export const MasterPC = () => {
     setSelectedPC(pc)
     setIsDeleteOpen(true)
   }
+
   const handleDelete = async () => {
-    const res = await window.api.deletePC(selectedPC.pc_id)
-    if (res.success) {
-      setIsDeleteOpen(false)
-      loadData()
-    } else {
-      alert('Gagal hapus: ' + res.message)
+    try {
+      const res = await window.api.deletePC(selectedPC.pc_id)
+      if (res.success) {
+        setIsDeleteOpen(false)
+        loadData()
+      } else {
+        alert('Gagal hapus: ' + res.message)
+      } 
+    } catch (err) {
+      console.error(err)
+      alert('⚠️ Terjadi error di sistem saat menghapus PC + ' + err.message)
     }
   }
 
   const handleOpenSoftware = async (pc) => {
     setSelectedPcForSoftware(pc)
-    const labSoftware = await window.api.getSoftware(pc.lab_id)
-    setAvailableSoftware(labSoftware)
-    const installedIds = await window.api.getPcInstalledSoftware(pc.pc_id)
-    setInstalledSoftwareIds(installedIds)
-    setIsSoftwareModalOpen(true)
+
+    const targetLabId = pc.lab_id || pc.LAB_ID;
+    const targetPcId = pc.pc_id || pc.PC_ID;
+
+    try {
+      // Panggil API dengan benar pakai targetLabId
+      const rawSoftware = await window.api.getSoftware(targetLabId);
+
+      const formattedSoftware = (rawSoftware || []).map((s) => ({
+        ...s,
+        software_id: s.SOFTWARE_ID || s.software_id,
+        software_name: s.SOFTWARE_NAME || s.software_name,
+        version: s.VERSION || s.version,
+        mata_kuliah: s.MATA_KULIAH || s.mata_kuliah
+      }))
+
+      setAvailableSoftware(formattedSoftware)
+
+      const installedIds = await window.api.getPcInstalledSoftware(targetPcId)
+      setInstalledSoftwareIds(installedIds || [])
+
+      setIsSoftwareModalOpen(true)
+    } catch (err) {
+      console.error("Error modal software:", err)
+    }
   }
 
   const handleToggleSoftware = (softwareId) => {
