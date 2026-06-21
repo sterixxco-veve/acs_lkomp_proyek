@@ -14,7 +14,8 @@ const api = {
 
   updatePC: (data) => ipcRenderer.invoke('db:updatePC', data),
 
-  updatePcStatusOnly: (pcId, status) => ipcRenderer.invoke('db:updatePcStatusOnly', { pcId, status }),
+  updatePcStatusOnly: (pcId, status) =>
+    ipcRenderer.invoke('db:updatePcStatusOnly', { pcId, status }),
 
   deletePC: (data) => ipcRenderer.invoke('db:deletePC', id),
 
@@ -59,6 +60,7 @@ const api = {
   getLiveActivity: () => ipcRenderer.invoke('db:getLiveActivity'),
   getPeminjam: () => ipcRenderer.invoke('db:getPeminjam'),
   addPeminjam: (data) => ipcRenderer.invoke('db:addPeminjam', data),
+  updatePeminjam: (data) => ipcRenderer.invoke('db:updatePeminjam', data),
 
   createPeminjaman: (data) => ipcRenderer.invoke('db:createPeminjaman', data),
 

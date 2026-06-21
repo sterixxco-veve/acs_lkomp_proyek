@@ -361,20 +361,7 @@ export const LoginScreen = ({ onLogin }) => { // Hapus goRegister & onOpenTv
                 </div>
               </div>
 
-              {/* Remember Me Checkbox */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                />
-                <label htmlFor="remember" className="ml-3 text-sm text-slate-600 font-medium cursor-pointer">
-                  Ingat saya
-                </label>
-              </div>
-
+            
               {/* Login Button */}
               <button
                 type="submit"

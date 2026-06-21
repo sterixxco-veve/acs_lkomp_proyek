@@ -155,6 +155,10 @@ function registerIpcHandlers() {
     return await db.addPeminjam(data)
   })
 
+  ipcMain.handle('db:updatePeminjam', async (_, data) => {
+    return await db.updatePeminjam(data)
+  })
+
   ipcMain.handle('db:createPeminjaman', async (_, data) => {
     return await db.createPeminjaman(data)
   })

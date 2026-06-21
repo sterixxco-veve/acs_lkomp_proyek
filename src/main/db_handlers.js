@@ -151,9 +151,14 @@ export async function getAllPCs(labId = null) {
 export async function getPeminjam() {
   try {
     const [rows] = await pool.query(`
-      SELECT *
-      FROM peminjam
-      ORDER BY nama_peminjam ASC
+      SELECT
+          pm.*,
+          COUNT(p.peminjaman_id) AS total_peminjaman
+      FROM peminjam pm
+      LEFT JOIN peminjaman p
+          ON pm.id_peminjam = p.id_peminjam
+      GROUP BY pm.id_peminjam
+      ORDER BY pm.nama_peminjam ASC;
     `)
 
     return rows
@@ -170,6 +175,21 @@ export async function addPeminjam(data) {
     data.nama_peminjam,
     data.nrp,
     data.kategori
+  ])
+
+  console.log(result)
+
+  return result
+}
+
+export async function updatePeminjam(data) {
+  console.log('UPDATE PEMINJAM:', data)
+
+  const [result] = await pool.query('CALL update_peminjam(?, ?, ?, ?)', [
+    data.nama_peminjam,
+    data.nrp,
+    data.kategori,
+    data.id_peminjam
   ])
 
   console.log(result)
@@ -825,6 +845,7 @@ export default {
 
   getPeminjam,
   addPeminjam,
+  updatePeminjam,
 
   createPeminjaman,
   addDetailPeminjaman,
