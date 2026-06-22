@@ -421,14 +421,12 @@ export async function addSoftware(data) {
     )
     const newSoftwareId = result.insertId
 
-    // 2. Insert ke tabel software_lab_access
-    if (data.lab_ids && data.lab_ids.length > 0) {
-      for (const labId of data.lab_ids) {
-        await connection.execute(
-          'INSERT INTO software_lab_access (software_id, lab_id) VALUES (?, ?)',
-          [newSoftwareId, labId]
-        )
-      }
+    // 2. 🔥 PERBAIKAN: Langsung insert 1 Lab ID (Tanpa For-Loop) 🔥
+    if (data.lab_id) {
+      await connection.execute(
+        'INSERT INTO software_lab_access (software_id, lab_id) VALUES (?, ?)',
+        [newSoftwareId, data.lab_id]
+      )
     }
 
     await connection.commit()
@@ -464,14 +462,12 @@ export async function updateSoftware(data) {
       data.software_id
     ])
 
-    // 3. Insert ulang akses lab
-    if (data.lab_ids && data.lab_ids.length > 0) {
-      for (const labId of data.lab_ids) {
-        await connection.execute(
-          'INSERT INTO software_lab_access (software_id, lab_id) VALUES (?, ?)',
-          [data.software_id, labId]
-        )
-      }
+    // 3. 🔥 PERBAIKAN: Langsung insert ulang 1 Lab ID (Tanpa For-Loop) 🔥
+    if (data.lab_id) {
+      await connection.execute(
+        'INSERT INTO software_lab_access (software_id, lab_id) VALUES (?, ?)',
+        [data.software_id, data.lab_id]
+      )
     }
 
     await connection.commit()
