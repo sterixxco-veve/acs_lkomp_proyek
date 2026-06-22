@@ -261,19 +261,30 @@ export const MasterSoftware = () => {
     const labIdFilter = user?.role_id === 5 ? null : user?.lab_id
     const res = await window.api.getSoftware(labIdFilter)
 
-    // Mapping Anti-Huruf Kapital dari DB
-    const formattedData = res.map((s) => ({
-      ...s,
-      software_id: s.SOFTWARE_ID || s.software_id,
-      software_name: s.SOFTWARE_NAME || s.software_name,
-      version: s.VERSION || s.version,
-      mata_kuliah: s.MATA_KULIAH || s.mata_kuliah,
-      license_type: s.LICENSE_TYPE || s.license_type,
-      license_expiry: s.LICENSE_EXPIRY || s.license_expiry,
-      lab_id: s.LAB_ID || s.lab_id,
-      lab_names: s.LAB_NAMES || s.lab_names,
-      installed_count: s.INSTALLED_COUNT || s.installed_count || 0
-    }))
+    console.log("=== RAW DATA DARI BACKEND ===", res);
+
+    // 🔥 JURUS MAPPING: Ekstrak lab_ids dari backend jadi lab_id tunggal 🔥
+    const formattedData = res.map((s) => {
+      const rawLab = s.LAB_ID || s.lab_id || s.LAB_IDS || s.lab_ids;
+      // Kalau dapetnya string "1" atau "1,2", kita ambil angka depannya aja
+      const finalLabId = rawLab ? parseInt(String(rawLab).split(',')[0]) : '';
+
+      return {
+        ...s,
+        software_id: s.SOFTWARE_ID || s.software_id,
+        software_name: s.SOFTWARE_NAME || s.software_name,
+        version: s.VERSION || s.version,
+        mata_kuliah: s.MATA_KULIAH || s.mata_kuliah,
+        license_type: s.LICENSE_TYPE || s.license_type,
+        license_expiry: s.LICENSE_EXPIRY || s.license_expiry,
+        
+        // Sekarang React bisa ngebaca ID-nya dengan bener!
+        lab_id: finalLabId,
+        
+        lab_names: s.LAB_NAMES || s.lab_names,
+        installed_count: s.INSTALLED_COUNT || s.installed_count || 0
+      }
+    })
 
     setSoftwareData(formattedData)
   }
